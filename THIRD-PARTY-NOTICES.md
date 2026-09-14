@@ -13,7 +13,7 @@ Ces binaires sont copiés dans le bundle applicatif (`resources/engines/`) et
 distribués avec chaque installateur. Rushes les invoque en **processus séparés**
 et n'est lié à aucun d'eux au sens de l'édition de liens.
 
-### FFmpeg et FFprobe — GPL-3.0-or-later
+### FFmpeg et FFprobe (GPL-3.0-or-later)
 
 - Source amont : <https://ffmpeg.org>
 - Build redistribué : [`ffmpeg-static`](https://github.com/eugeneware/ffmpeg-static)
@@ -34,20 +34,20 @@ La GPL s'applique à ces binaires, **pas** à Rushes : Rushes les exécute en
 sous-processus, sans liaison statique ni dynamique, et ne constitue donc pas une
 œuvre dérivée de FFmpeg.
 
-### yt-dlp — The Unlicense (domaine public)
+### yt-dlp (The Unlicense, domaine public)
 
 - Source : <https://github.com/yt-dlp/yt-dlp>
 - Licence : <https://github.com/yt-dlp/yt-dlp/blob/master/LICENSE>
 - Binaire officiel redistribué, aucune obligation d'attribution, conservée ici
   par correction.
 
-### Deno — MIT
+### Deno (MIT)
 
 - Source : <https://github.com/denoland/deno>
 - Licence : <https://github.com/denoland/deno/blob/main/LICENSE.md>
 - Copyright (c) 2018-2026 the Deno authors.
 - La licence MIT impose la conservation de la notice de copyright lors de la
-  redistribution du binaire ; c'est l'objet de la présente mention.
+  redistribution du binaire. C'est l'objet de la présente mention.
 
 ---
 

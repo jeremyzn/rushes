@@ -103,7 +103,7 @@ Les builds macOS ne sont **ni signés ni notarisés** : cela demanderait un comp
 
 Conséquence au premier lancement, macOS affiche « Rushes ne peut pas être ouvert » ou « Rushes est endommagé ». Deux contournements :
 
-- **clic droit sur Rushes.app → Ouvrir**, puis confirmer (à faire une seule fois) ;
+- **clic droit sur Rushes.app → Ouvrir**, puis confirmer (à faire une seule fois)
 - ou, si le message « endommagé » persiste, retirer l’attribut de quarantaine :
 
 ```bash
@@ -157,7 +157,7 @@ Le support effectif d’une URL dépend aussi de la plateforme et de la version 
 
 ## Licence
 
-Rushes est un **logiciel propriétaire** — voir [LICENSE](LICENSE). Tous droits réservés.
+Rushes est un **logiciel propriétaire**, voir [LICENSE](LICENSE). Tous droits réservés.
 
 Le binaire officiel est libre d'usage, gratuitement, à titre personnel ou professionnel. En revanche, la copie du code source, la modification, le fork, la redistribution et le rebranding sont interdits sans autorisation écrite. Ce dépôt n'est ni libre ni open source, malgré la visibilité de son code.
 
