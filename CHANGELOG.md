@@ -4,6 +4,24 @@ Les sections de ce fichier alimentent les notes publiées sur GitHub et la fenê
 de mise à jour de l'application. Le titre de chaque version doit rester au format
 `## 1.2.3`, c'est lui qui sert de repère à `scripts/release-notes.mjs`.
 
+## 1.0.4
+
+### Windows
+
+- Plus aucune fenêtre de commande ne s'ouvre : ni au lancement de Rushes, ni à chaque analyse ou téléchargement.
+
+### Spotify
+
+- Les albums, playlists et titres populaires d'un artiste sont pris en charge. Les morceaux s'affichent en liste et se sélectionnent un par un.
+- Les liens partagés depuis l'application Spotify (`?si=…`, `intl-fr`, `spotify.link`) fonctionnaient mal : Spotify renvoyait une page de redirection sans métadonnées.
+- La version YouTube est choisie d'après la durée, l'artiste et le titre, en écartant les versions live, remix ou accélérées.
+- Le fichier porte le nom et les balises du morceau Spotify, et non ceux de la vidéo YouTube.
+- Les épisodes de podcast sont acceptés. Spotify ne publiant que 100 morceaux d'une playlist, les plus longues sont signalées.
+
+### Mises à jour
+
+- La fenêtre de mise à jour n'affiche plus que les nouveautés, sans les consignes d'installation ni la licence.
+
 ## 1.0.3
 
 ### Musique

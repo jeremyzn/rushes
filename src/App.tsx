@@ -16,7 +16,7 @@ import { AppHeader } from "./components/AppHeader";
 import { providerMeta } from "./components/providers";
 import { NetworkBanner } from "./components/NetworkBanner";
 import { CommandPalette, type Command as Cmd } from "./components/CommandPalette";
-import { Markdown } from "./components/markdown";
+import { Markdown, releaseHighlights } from "./components/markdown";
 import type { AnalyzerState } from "./components/UrlAnalyzer";
 import { Button } from "./components/ui/button";
 import { Progress } from "./components/ui/progress";
@@ -28,7 +28,7 @@ import { LivePage } from "./pages/LivePage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { SettingsPage } from "./pages/SettingsPage";
-import type { DownloadMode, DownloadTask, EngineStatus, MediaInfo, Page, RuntimeInfo, Settings } from "./types";
+import type { DownloadMode, DownloadTask, EngineStatus, MediaInfo, Page, RuntimeInfo, Settings, TrackEntry } from "./types";
 
 function resolveDark(theme: Settings["theme"]) {
   return theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -194,23 +194,40 @@ export default function App() {
     try {
       const media = await analyzeUrl(url.trim());
       setInfo(media); setQuality(media.qualities[0]?.id || "best");
-      // Un lien Spotify désigne un morceau : le téléchargement est audio par nature.
+      // Spotify ne mène qu'à de l'audio : le morceau est retrouvé sur YouTube.
       if (media.provider === "spotify") setMode("audio");
     } catch (e) { toast.error("Analyse impossible", { description: String(e) }); }
     finally { setAnalyzing(false); }
   }
 
-  async function download() {
+  /** `tracks` : morceaux retenus d'une liste Spotify. Absent pour un média seul. */
+  async function download(tracks?: TrackEntry[]) {
     if (!info || !settings || !network.online) return;
+    const common = { quality, speedProfile: settings.speedProfile, audioFormat: settings.audioFormat, container: settings.container };
     try {
-      const task = await startDownload({
-        url: info.url, provider: info.provider, title: info.title, author: info.author, thumbnail: info.thumbnail,
-        quality, mediaType: info.mediaType, speedProfile: settings.speedProfile, mode,
-        audioFormat: settings.audioFormat, container: settings.container,
-      });
-      setDownloads((v) => [task, ...v.filter((t) => t.id !== task.id)]);
+      if (tracks) {
+        if (!tracks.length) return;
+        // La pochette d'un album vaut pour chacun de ses morceaux, pas celle d'une playlist.
+        const cover = info.category === "Album" ? info.thumbnail : undefined;
+        const added: DownloadTask[] = [];
+        for (const track of tracks) {
+          added.push(await startDownload({
+            ...common, url: track.url, provider: "spotify", title: track.title, author: track.artist, thumbnail: cover,
+            mediaType: "music", mode: "audio", duration: track.duration,
+          }));
+        }
+        setDownloads((v) => [...added.reverse(), ...v.filter((t) => !added.some((a) => a.id === t.id))]);
+        toast.success(`${tracks.length} morceau${tracks.length > 1 ? "x" : ""} ajouté${tracks.length > 1 ? "s" : ""} à la file`, { description: `Spotify · ${info.title}` });
+      } else {
+        const task = await startDownload({
+          ...common, url: info.url, provider: info.provider, title: info.title, author: info.author, thumbnail: info.thumbnail,
+          mediaType: info.mediaType, mode: info.provider === "spotify" ? "audio" : mode,
+          duration: info.provider === "spotify" ? info.duration : undefined,
+        });
+        setDownloads((v) => [task, ...v.filter((t) => t.id !== task.id)]);
+        toast.success("Ajouté à la file", { description: `${providerMeta[info.provider].label} · ${info.title}` });
+      }
       setInfo(null); setUrl("");
-      toast.success("Ajouté à la file", { description: `${providerMeta[info.provider].label} · ${info.title}` });
     } catch (e) { toast.error("Impossible de démarrer", { description: String(e) }); }
   }
 
@@ -383,7 +400,7 @@ export default function App() {
           >
             <div className="mt-4 max-h-[min(42dvh,320px)] overflow-y-auto rounded-xl border border-[var(--line)] bg-[var(--raised)] p-3.5 text-[13px] leading-5 text-[var(--muted)]">
               <Markdown
-                source={updateDialog?.body || "Correctifs et mises à jour des moteurs embarqués."}
+                source={releaseHighlights(updateDialog?.body || "") || "Correctifs et mises à jour des moteurs embarqués."}
                 className="space-y-2"
               />
             </div>

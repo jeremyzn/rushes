@@ -201,6 +201,7 @@ export async function analyzeUrl(url: string): Promise<MediaInfo> {
   catch { throw new Error("Lien invalide. Collez l'adresse complète de la page."); }
 
   const host = parsed.hostname.replace(/^www\./, "");
+  if (host.includes("spotify")) return demoSpotify(parsed);
   const provider: Provider =
     host.includes("twitch") ? "twitch" : host.includes("youtu") ? "youtube" : host.includes("tiktok") ? "tiktok" : "other";
 
@@ -240,6 +241,19 @@ export async function analyzeUrl(url: string): Promise<MediaInfo> {
       ...ladder.map(([label, detail]) => ({ id: label.toLowerCase(), label, detail })),
     ],
   };
+}
+
+/** Un lien de morceau donne une carte seule, tout autre lien une liste. */
+function demoSpotify(parsed: URL): MediaInfo {
+  const id = parsed.pathname.split("/").filter(Boolean).at(-1) || uid();
+  const qualities = [{ id: "best", label: "Meilleure qualité" }];
+  const base = { url: parsed.toString(), provider: "spotify" as const, mediaType: "music" as const, id, isLive: false, qualities, thumbnail: demoThumbnail(id, "spotify") };
+  if (parsed.pathname.includes("/track/")) {
+    return { ...base, title: "Lumière d'hiver", author: "Maison Bleue", duration: 214 };
+  }
+  const entries = ["Lumière d'hiver", "Rue des Martyrs", "Minuit passé", "Le long du canal", "Sans bruit", "Dernier métro"]
+    .map((title, index) => ({ id: `${id}-${index}`, url: `https://open.spotify.com/track/${id}${index}`, title, artist: "Maison Bleue", duration: 160 + index * 23 }));
+  return { ...base, title: "Nuits blanches", author: "Maison Bleue", category: "Album", duration: entries.reduce((s, e) => s + e.duration, 0), entries };
 }
 
 const TITLES = [

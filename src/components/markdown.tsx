@@ -10,6 +10,21 @@
    */
 import type { ReactNode } from "react";
 
+// Les notes s'affichent dans un encadré `--raised` : le code prend le fond de la
+// toile pour ne pas s'y confondre.
+const PRE = "mono overflow-x-auto rounded-[9px] border border-[var(--line)] bg-[var(--canvas)] p-2.5 text-[11.5px] text-[var(--ink)]";
+
+/**
+ * Ne garde que les changements d'une note de version. Les releases publiées
+ * jusqu'ici ajoutent installation et licence après une section « Nouveautés » :
+ * inutile dans la fenêtre de mise à jour.
+ */
+export function releaseHighlights(body: string): string {
+  const text = body.replace(/\r\n/g, "\n");
+  const news = /^##\s+Nouveautés\s*$([\s\S]*?)(?=^##\s|(?![\s\S]))/m.exec(text);
+  return (news ? news[1] : text).trim();
+}
+
 /** Gras, code et liens à l'intérieur d'une ligne. */
 function inline(text: string, keyPrefix: string): ReactNode[] {
   const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
@@ -19,7 +34,7 @@ function inline(text: string, keyPrefix: string): ReactNode[] {
       return <strong key={key} className="font-semibold text-[var(--ink)]">{piece.slice(2, -2)}</strong>;
     }
     if (piece.startsWith("`") && piece.endsWith("`")) {
-      return <code key={key} className="mono rounded-[5px] bg-[var(--raised)] px-1 py-px text-[.92em] text-[var(--ink)]">{piece.slice(1, -1)}</code>;
+      return <code key={key} className="mono rounded-[5px] bg-[var(--canvas)] px-1 py-px text-[.92em] text-[var(--ink)]">{piece.slice(1, -1)}</code>;
     }
     const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(piece);
     // Le lien reste du texte : ouvrir un navigateur depuis une note distante
@@ -56,21 +71,26 @@ export function Markdown({ source, className }: { source: string; className?: st
   };
   const flushAll = () => { flushList(); flushQuote(); };
 
+  // Vrai quand le bloc de code s'est ouvert dans une citation (`> ````) : ses
+  // lignes portent alors le préfixe `>`, qu'il faut retirer.
+  let codeQuoted = false;
+
   for (const raw of lines) {
     const line = raw.trimEnd();
+    const fence = /^(>\s?)?\s*```/.exec(line);
 
-    if (line.trim().startsWith("```")) {
+    if (fence && (!code || !!fence[1] === codeQuoted)) {
       if (code) {
         blocks.push(
-          <pre key={`pre-${blocks.length}`} className="mono overflow-x-auto rounded-[9px] bg-[var(--raised)] p-2.5 text-[11.5px] text-[var(--ink)]">
+          <pre key={`pre-${blocks.length}`} className={PRE}>
             {code.join("\n")}
           </pre>,
         );
         code = null;
-      } else { flushAll(); code = []; }
+      } else { flushAll(); code = []; codeQuoted = !!fence[1]; }
       continue;
     }
-    if (code) { code.push(raw); continue; }
+    if (code) { code.push(codeQuoted ? raw.replace(/^>\s?/, "") : raw); continue; }
 
     const heading = /^(#{1,4})\s+(.*)$/.exec(line);
     if (heading) {
@@ -100,7 +120,7 @@ export function Markdown({ source, className }: { source: string; className?: st
   flushAll();
   if (code?.length) {
     blocks.push(
-      <pre key={`pre-${blocks.length}`} className="mono overflow-x-auto rounded-[9px] bg-[var(--raised)] p-2.5 text-[11.5px] text-[var(--ink)]">
+      <pre key={`pre-${blocks.length}`} className={PRE}>
         {code.join("\n")}
       </pre>,
     );

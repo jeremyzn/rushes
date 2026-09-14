@@ -61,3 +61,25 @@ jobs:
           retryAttempts: 2
           updaterJsonPreferNsis: true
           args: ${{ matrix.args }} --config src-tauri/tauri.release.conf.json
+      # tauri-action recopie le corps de la release dans latest.json, installation
+      # et licence comprises. La fenêtre de mise à jour n'a besoin que des
+      # changements, d'autant que les clients antérieurs à 1.0.3 les affichent en
+      # brut. Chaque plateforme réécrit latest.json, d'où ce passage à chaque job.
+      - name: Alléger les notes du updater
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NOTES_FILE: ${{ steps.notes.outputs.notes-file }}
+        run: |
+          tag="v$(node -p "require('./package.json').version")"
+          dir="$RUNNER_TEMP/updater"
+          mkdir -p "$dir"
+          gh release download "$tag" --pattern latest.json --dir "$dir" --clobber
+          node -e '
+            const fs = require("fs");
+            const [file, notesFile] = process.argv.slice(1);
+            const manifest = JSON.parse(fs.readFileSync(file, "utf8"));
+            manifest.notes = fs.readFileSync(notesFile, "utf8").trim();
+            fs.writeFileSync(file, JSON.stringify(manifest, null, 2));
+          ' "$dir/latest.json" "$NOTES_FILE"
+          gh release upload "$tag" "$dir/latest.json" --clobber

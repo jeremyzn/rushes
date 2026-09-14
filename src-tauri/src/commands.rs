@@ -32,34 +32,82 @@ fn provider_from(url:&str, data:&Value)->String {
 
 fn yt_dlp_base() -> Result<Command,String> {
     let ytdlp=tools::find_tool("yt-dlp").ok_or("Le moteur yt-dlp intégré est introuvable. Réinstaller Rushes ou vérifier Réglages > Moteurs.")?;
-    let mut cmd=Command::new(ytdlp);
+    let mut cmd=tools::command(ytdlp);
     if let Some(deno)=tools::find_tool("deno") { cmd.args(["--js-runtimes", &format!("deno:{}",deno.to_string_lossy())]); }
     if let Some(ffmpeg)=tools::find_tool("ffmpeg") { if let Some(parent)=ffmpeg.parent(){cmd.args(["--ffmpeg-location", &parent.to_string_lossy()]);} }
     Ok(cmd)
 }
 
+/// Carte d'un lien Spotify : un morceau, ou la liste d'un album, d'une playlist ou d'un artiste.
+async fn analyze_spotify(url:String)->Result<MediaInfo,String>{
+    let found=spotify::resolve(&url).await?;
+    let single=matches!(found.kind.as_str(),"track"|"episode");
+    let duration:f64=found.entries.iter().map(|e|e.duration).sum();
+    let category=match found.kind.as_str(){
+        "album"=>"Album".to_string(),"playlist"=>"Playlist".to_string(),"artist"=>"Artiste".to_string(),"episode"=>"Épisode de podcast".to_string(),_=>String::new(),
+    };
+    let id=found.entries.first().filter(|_|single).map(|e|e.id.clone()).unwrap_or_default();
+    Ok(MediaInfo{
+        url,provider:"spotify".into(),media_type:"music".into(),id,title:found.title,author:found.subtitle,category,duration,
+        thumbnail:found.thumbnail,is_live:false,
+        qualities:vec![QualityOption{id:"best".into(),label:"Meilleure qualité".into(),detail:None,height:None,fps:None}],
+        entries:if single{Vec::new()}else{found.entries},total:found.total,
+    })
+}
+
 #[tauri::command]
 pub async fn analyze_url(url:String)->Result<MediaInfo,String>{
-    // Spotify chiffre ses flux : on lit seulement ses métadonnées publiques, puis
-    // l'audio est cherché sur YouTube. Aucune protection n'est contournée.
-    let track=if spotify::is_spotify(&url){Some(spotify::resolve(&url).await?)}else{None};
-    let target=match &track{Some(t)=>spotify::search_query(t),None=>url.clone()};
+    // Spotify chiffre ses flux : on lit seulement ses métadonnées publiques. La
+    // version YouTube est choisie au lancement du téléchargement.
+    if spotify::is_spotify(&url){return analyze_spotify(url).await}
     let mut cmd=yt_dlp_base()?;
-    cmd.args(["--dump-single-json","--skip-download","--no-playlist","--no-warnings","--ignore-config",&target]);
+    cmd.args(["--dump-single-json","--skip-download","--no-playlist","--no-warnings","--ignore-config",&url]);
     let output=cmd.output().await.map_err(|e|e.to_string())?;
     if !output.status.success(){let err=String::from_utf8_lossy(&output.stderr);return Err(friendly_error(&err))}
     let data:Value=serde_json::from_slice(&output.stdout).map_err(|e|format!("Réponse média invalide: {e}"))?;
-    let provider=if track.is_some(){"spotify".to_string()}else{provider_from(&url,&data)};
+    let provider=provider_from(&url,&data);
     let is_live=data.get("is_live").and_then(Value::as_bool).unwrap_or(false) || matches!(data.get("live_status").and_then(Value::as_str),Some("is_live"));
-    let media_type=if track.is_some(){"music"}else if is_live{"live"}else if provider=="twitch"&&url.to_lowercase().contains("clip"){"clip"}else if provider=="twitch"{"vod"}else if (provider=="youtube"&&url.to_lowercase().contains("shorts/"))||provider=="tiktok"{"short"}else{"video"};
+    let media_type=if is_live{"live"}else if provider=="twitch"&&url.to_lowercase().contains("clip"){"clip"}else if provider=="twitch"{"vod"}else if (provider=="youtube"&&url.to_lowercase().contains("shorts/"))||provider=="tiktok"{"short"}else{"video"};
     let mut quality_map:BTreeMap<(u64,u64),String>=BTreeMap::new();
     if let Some(formats)=data.get("formats").and_then(Value::as_array){for f in formats{let h=f.get("height").and_then(Value::as_u64).unwrap_or(0);if h==0{continue}let fps=f.get("fps").and_then(Value::as_f64).unwrap_or(0.0).round() as u64;let ext=f.get("ext").and_then(Value::as_str).unwrap_or("");let codec=f.get("vcodec").and_then(Value::as_str).unwrap_or("");quality_map.entry((h,fps)).or_insert(format!("{} · {}",ext.to_uppercase(),codec));}}
     let mut qualities=vec![QualityOption{id:"best".into(),label:"Meilleure qualité".into(),detail:Some("Source / automatique".into()),height:None,fps:None}];
     for ((h,fps),detail) in quality_map.into_iter().rev().take(10){let label=if fps>=50{format!("{}p{}",h,fps)}else{format!("{}p",h)};qualities.push(QualityOption{id:label.clone(),label,detail:Some(detail),height:Some(h),fps:Some(fps as f64)});}
-    let title=match &track{Some(t)=>t.title.clone(),None=>data.get("title").and_then(Value::as_str).unwrap_or("Sans titre").into()};
-    let author=match &track{Some(t) if !t.artist.is_empty()=>t.artist.clone(),_=>data.get("uploader").or_else(||data.get("channel")).and_then(Value::as_str).unwrap_or("Créateur").into()};
-    let thumbnail=match &track{Some(t) if !t.thumbnail.is_empty()=>t.thumbnail.clone(),_=>data.get("thumbnail").and_then(Value::as_str).unwrap_or("").into()};
-    Ok(MediaInfo{url,provider,media_type:media_type.into(),id:data.get("id").and_then(Value::as_str).unwrap_or("").into(),title,author,category:data.get("categories").and_then(Value::as_array).and_then(|a|a.first()).and_then(Value::as_str).unwrap_or("").into(),duration:data.get("duration").and_then(Value::as_f64).unwrap_or(0.0),thumbnail,is_live,qualities})
+    let title=data.get("title").and_then(Value::as_str).unwrap_or("Sans titre").into();
+    let author=data.get("uploader").or_else(||data.get("channel")).and_then(Value::as_str).unwrap_or("Créateur").into();
+    let thumbnail=data.get("thumbnail").and_then(Value::as_str).unwrap_or("").into();
+    Ok(MediaInfo{url,provider,media_type:media_type.into(),id:data.get("id").and_then(Value::as_str).unwrap_or("").into(),title,author,category:data.get("categories").and_then(Value::as_array).and_then(|a|a.first()).and_then(Value::as_str).unwrap_or("").into(),duration:data.get("duration").and_then(Value::as_f64).unwrap_or(0.0),thumbnail,is_live,qualities,entries:Vec::new(),total:None})
+}
+
+fn is_spotify_request(r:&DownloadRequest)->bool{r.provider=="spotify"&&spotify::is_spotify(&r.url)}
+
+/// Nom de fichier sûr sur Windows comme sur macOS, échappé pour le gabarit yt-dlp.
+fn file_stem(artist:&str,title:&str)->String{
+    let raw=if artist.is_empty(){title.to_string()}else{format!("{artist} - {title}")};
+    let clean:String=raw.chars().map(|c|if c.is_control()||r#"<>:"/\|?*"#.contains(c){' '}else{c}).collect();
+    let clean=clean.split_whitespace().collect::<Vec<_>>().join(" ");
+    let clean:String=clean.trim_matches(|c:char|c=='.'||c==' ').chars().take(180).collect();
+    let clean=if clean.is_empty(){"Morceau".to_string()}else{clean};
+    clean.replace('%',"%%")
+}
+
+/// Argument shlex pour `--postprocessor-args`.
+fn shell_quote(value:&str)->String{format!("\"{}\"",value.replace('\\',"\\\\").replace('"',"\\\""))}
+
+/// Trouve sur YouTube la version d'un morceau Spotify la plus proche de l'original.
+async fn match_on_youtube(request:&DownloadRequest)->Result<String,String>{
+    let (mut title,mut artist,mut duration)=(request.title.clone(),request.author.clone(),request.duration.unwrap_or(0.0));
+    // Tâches créées avant 1.0.4 : ni durée ni garantie sur le titre, on relit Spotify.
+    if request.duration.is_none(){
+        if let Ok(found)=spotify::resolve(&request.url).await{
+            if let Some(e)=found.entries.into_iter().next(){title=e.title;artist=e.artist;duration=e.duration;}
+        }
+    }
+    let mut cmd=yt_dlp_base()?;
+    cmd.args(["--flat-playlist","--dump-single-json","--no-warnings","--ignore-config",&spotify::search_query(&artist,&title)]);
+    let output=cmd.output().await.map_err(|e|e.to_string())?;
+    if !output.status.success(){return Err(friendly_error(&String::from_utf8_lossy(&output.stderr)))}
+    let data:Value=serde_json::from_slice(&output.stdout).map_err(|e|format!("Recherche YouTube illisible : {e}"))?;
+    spotify::best_match(&title,&artist,duration,&data).ok_or_else(||format!("Aucune version de « {title} » trouvée sur YouTube."))
 }
 
 fn build_download_command(r:&DownloadRequest, settings:&Settings)->Result<Command,String>{
@@ -68,8 +116,15 @@ fn build_download_command(r:&DownloadRequest, settings:&Settings)->Result<Comman
     let outdir=PathBuf::from(&settings.output_dir);fs::create_dir_all(&outdir).map_err(|e|e.to_string())?;
     // Template de sortie en chemin absolu : yt-dlp annonce alors une destination absolue,
     // seule forme que `openPath` et `revealItemInDir` savent ouvrir côté interface.
-    let template=outdir.join("%(uploader)s - %(title).180B [%(id)s].%(ext)s");
+    let spotify_track=is_spotify_request(r);
+    // Un morceau Spotify garde le nom affiché dans Spotify, et non celui de la vidéo YouTube.
+    let template=if spotify_track{outdir.join(format!("{}.%(ext)s",file_stem(&r.author,&r.title)))}else{outdir.join("%(uploader)s - %(title).180B [%(id)s].%(ext)s")};
     c.args(["-o",&template.to_string_lossy()]);
+    if spotify_track {
+        let mut tags=format!("-metadata title={}",shell_quote(&r.title));
+        if !r.author.is_empty(){tags.push_str(&format!(" -metadata artist={}",shell_quote(&r.author)));}
+        c.args(["--embed-metadata","--postprocessor-args",&format!("Metadata:{tags}")]);
+    }
     if settings.download_thumbnail { c.arg("--write-thumbnail"); }
     if settings.cookies_browser!="none" { c.args(["--cookies-from-browser",&settings.cookies_browser]); }
     if r.mode=="audio" { let af=r.audio_format.as_deref().unwrap_or(&settings.audio_format); c.args(["-x","--audio-format",af,"--audio-quality","0"]); }
@@ -79,7 +134,7 @@ fn build_download_command(r:&DownloadRequest, settings:&Settings)->Result<Comman
         let container=r.container.as_deref().unwrap_or(&settings.container); if container=="mp4"||container=="mkv" {c.args(["--merge-output-format",container]);}
     }
     if r.media_type=="live" { c.args(["--live-from-start","--hls-use-mpegts"]); }
-    c.arg(&r.url); c.stdout(Stdio::piped()).stderr(Stdio::piped()); Ok(c)
+    c.arg(r.resolved_url.as_deref().unwrap_or(&r.url)); c.stdout(Stdio::piped()).stderr(Stdio::piped()); Ok(c)
 }
 
 fn spawn_for_task(id:String, request:DownloadRequest, state:AppState)->Result<(),String>{
@@ -120,7 +175,23 @@ async fn schedule_queue(state:AppState){
                 let item=(t.id.clone(),t.request.clone());persist(&tasks);Some(item)
             }else{None}
         };
-        let Some((id,request))=next else{return;};
+        let Some((id,mut request))=next else{return;};
+        // La recherche YouTube attend le départ réel : ajouter une playlist de cent
+        // morceaux ne lance pas cent recherches d'un coup.
+        if is_spotify_request(&request)&&request.resolved_url.is_none(){
+            match match_on_youtube(&request).await {
+                Ok(found)=>{
+                    request.resolved_url=Some(found.clone());
+                    let mut tasks=state.tasks.lock();if let Some(t)=tasks.iter_mut().find(|t|t.id==id){t.request.resolved_url=Some(found);}persist(&tasks);
+                }
+                Err(err)=>{
+                    let mut tasks=state.tasks.lock();if let Some(t)=tasks.iter_mut().find(|t|t.id==id){t.state="error".into();t.error=Some(err);}persist(&tasks);
+                    continue;
+                }
+            }
+            // Mise en pause ou annulation pendant la recherche : on n'y touche plus.
+            if !state.tasks.lock().iter().any(|t|t.id==id&&t.state=="preparing"){continue;}
+        }
         if let Err(err)=spawn_for_task(id.clone(),request,state.clone()){
             let mut tasks=state.tasks.lock();if let Some(t)=tasks.iter_mut().find(|t|t.id==id){t.state="error".into();t.error=Some(friendly_error(&err));}persist(&tasks);
         }
@@ -129,17 +200,24 @@ async fn schedule_queue(state:AppState){
 
 #[tauri::command]
 pub async fn start_download(request:DownloadRequest,state:State<'_,AppState>)->Result<DownloadTask,String>{
-    // L'affichage conserve le lien collé, le moteur reçoit la requête YouTube.
+    // Le lien Spotify reste celui de la tâche ; la version YouTube est cherchée au départ.
     let mut request=request;
-    let source=request.url.clone();
+    request.resolved_url=None;
     if spotify::is_spotify(&request.url){
-        let track=spotify::resolve(&request.url).await?;
-        request.url=spotify::search_query(&track);
-        if request.mode!="audio"{request.mode="audio".into()}
+        request.provider="spotify".into();
+        request.mode="audio".into();
+        request.media_type="music".into();
+        if request.title.is_empty()||request.duration.is_none(){
+            let found=spotify::resolve(&request.url).await?;
+            let entry=found.entries.into_iter().next().ok_or("Colle le lien d'un morceau, ou analyse la liste d'abord.")?;
+            request.title=entry.title;request.author=entry.artist;request.duration=Some(entry.duration);request.url=entry.url;
+            if request.thumbnail.is_none(){request.thumbnail=Some(found.thumbnail).filter(|t|!t.is_empty());}
+        }
     }
+    let source=request.url.clone();
     let settings:Settings=read_json(&tools::settings_path()).unwrap_or_default();let id=Uuid::new_v4().to_string();let task=DownloadTask{id:id.clone(),url:source,provider:request.provider.clone(),title:request.title.clone(),author:request.author.clone(),thumbnail:request.thumbnail.clone(),quality:request.quality.clone(),mode:request.mode.clone(),state:"queued".into(),progress:0.0,speed_bps:0.0,downloaded_bytes:0,total_bytes:None,eta_seconds:None,engine:Some("yt-dlp".into()),error:None,output_path:Some(settings.output_dir.clone()),created_at:Utc::now().to_rfc3339(),media_type:request.media_type.clone(),request:request.clone(),pid:None};
     {let mut tasks=state.tasks.lock();tasks.insert(0,task.clone());persist(&tasks)}
-    schedule_queue(state.inner().clone()).await;
+    tauri::async_runtime::spawn(schedule_queue(state.inner().clone()));
     Ok(task)
 }
 
@@ -178,7 +256,7 @@ pub fn list_downloads(state:State<'_,AppState>)->Vec<DownloadTask>{
                 if t.provider.is_empty(){t.provider=provider_from(&t.url,&Value::Null);}
                 if t.mode.is_empty(){t.mode="video".into();}
                 if ["downloading","preparing","finalizing"].contains(&t.state.as_str()){t.state="paused".into();t.speed_bps=0.0;t.error=Some("Téléchargement interrompu lors de la fermeture précédente. Reprise possible.".into());}
-                if t.request.url.is_empty(){t.request=DownloadRequest{url:t.url.clone(),provider:t.provider.clone(),title:t.title.clone(),author:t.author.clone(),thumbnail:t.thumbnail.clone(),quality:t.quality.clone(),media_type:t.media_type.clone(),speed_profile:"auto".into(),mode:t.mode.clone(),audio_format:None,container:None};}
+                if t.request.url.is_empty(){t.request=DownloadRequest{url:t.url.clone(),provider:t.provider.clone(),title:t.title.clone(),author:t.author.clone(),thumbnail:t.thumbnail.clone(),quality:t.quality.clone(),media_type:t.media_type.clone(),speed_profile:"auto".into(),mode:t.mode.clone(),..Default::default()};}
             }
             *tasks=v;
         }
@@ -191,12 +269,12 @@ pub async fn task_action(id:String,action:String,state:State<'_,AppState>)->Resu
     if action=="pause"||action=="cancel" {
         let child=state.children.lock().remove(&id);if let Some(mut c)=child{let _=c.kill().await;}
         {let mut tasks=state.tasks.lock();if let Some(t)=tasks.iter_mut().find(|t|t.id==id){match action.as_str(){"pause"=>{t.state="paused".into();t.speed_bps=0.0},"cancel"=>{t.state="cancelled".into();t.speed_bps=0.0},_=>{}}}persist(&tasks)}
-        schedule_queue(state.inner().clone()).await;
+        tauri::async_runtime::spawn(schedule_queue(state.inner().clone()));
         return Ok(());
     }
     if action=="resume"||action=="retry" {
         {let mut tasks=state.tasks.lock();let t=tasks.iter_mut().find(|t|t.id==id).ok_or("Téléchargement introuvable")?;if action=="retry"{t.progress=0.0;t.downloaded_bytes=0;t.total_bytes=None;t.eta_seconds=None;}t.state="queued".into();t.error=None;persist(&tasks)}
-        schedule_queue(state.inner().clone()).await;
+        tauri::async_runtime::spawn(schedule_queue(state.inner().clone()));
         return Ok(());
     }
     Err("Action de téléchargement inconnue".into())
@@ -206,7 +284,7 @@ pub async fn task_action(id:String,action:String,state:State<'_,AppState>)->Resu
 pub async fn remove_task(id:String,state:State<'_,AppState>)->Result<(),String>{
     let child=state.children.lock().remove(&id);if let Some(mut c)=child{let _=c.kill().await;}
     {let mut tasks=state.tasks.lock();tasks.retain(|t|t.id!=id);persist(&tasks)}
-    schedule_queue(state.inner().clone()).await;
+    tauri::async_runtime::spawn(schedule_queue(state.inner().clone()));
     Ok(())
 }
 
@@ -224,7 +302,7 @@ pub async fn engine_status()->Vec<EngineStatus>{let specs=[("yt-dlp","yt-dlp",ve
 #[tauri::command]
 pub async fn update_engines()->Result<String,String>{
     let mut notes=Vec::new();
-    if let Some(y)=tools::find_tool("yt-dlp"){let s=Command::new(y).arg("-U").status().await.map_err(|e|e.to_string())?;notes.push(format!("yt-dlp: {}",if s.success(){"OK"}else{"à vérifier"}));}
+    if let Some(y)=tools::find_tool("yt-dlp"){let s=tools::command(y).arg("-U").status().await.map_err(|e|e.to_string())?;notes.push(format!("yt-dlp: {}",if s.success(){"OK"}else{"à vérifier"}));}
     // Le binaire Deno officiel est compilé sans `deno upgrade` : il suit les mises à jour de l'app, comme FFmpeg.
     notes.push("Deno et FFmpeg suivent les mises à jour de Rushes".into());Ok(notes.join(" · "))
 }

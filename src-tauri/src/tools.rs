@@ -62,8 +62,20 @@ pub fn install_bundled_engines(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Commande d'un moteur. Sous Windows, yt-dlp, FFmpeg et Deno sont des programmes
+/// console : sans `CREATE_NO_WINDOW`, chaque lancement fait surgir une fenêtre cmd.
+/// Les processus qu'ils lancent eux-mêmes héritent de cette console invisible.
+pub fn command(program: impl AsRef<std::ffi::OsStr>) -> Command {
+    let mut cmd = Command::new(program);
+    #[cfg(windows)] {
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd
+}
+
 pub async fn version(path: &Path, args: &[&str]) -> String {
-    match Command::new(path).args(args).output().await {
+    match command(path).args(args).output().await {
         Ok(o) => String::from_utf8_lossy(if o.stdout.is_empty(){&o.stderr}else{&o.stdout}).lines().next().unwrap_or("").trim().to_string(),
         Err(_) => String::new(),
     }

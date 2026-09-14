@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Tabs } from "radix-ui";
 import { toast } from "sonner";
@@ -11,12 +12,13 @@ import { Tooltip } from "./ui/tooltip";
 import { Badge, Kbd } from "./ui/badge";
 import { readClipboard } from "../lib/platform";
 import { formatDuration } from "../lib/utils";
-import type { DownloadMode, MediaInfo, Provider } from "../types";
+import type { DownloadMode, MediaInfo, Provider, TrackEntry } from "../types";
 
 export type AnalyzerState = {
   url: string; setUrl: (s: string) => void; analyze: () => void; analyzing: boolean; info: MediaInfo | null;
   quality: string; setQuality: (s: string) => void; mode: DownloadMode; setMode: (m: DownloadMode) => void;
-  download: () => void; online: boolean; inputRef: React.RefObject<HTMLInputElement | null>;
+  /** `tracks` : morceaux retenus d'une liste Spotify. */
+  download: (tracks?: TrackEntry[]) => void; online: boolean; inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
 const HINTS: Provider[] = ["twitch", "youtube", "tiktok", "spotify", "other"];
@@ -108,6 +110,19 @@ function AnalyzingCard() {
 function MediaCard({ state, info }: { state: AnalyzerState; info: MediaInfo }) {
   const { quality, setQuality, mode, setMode, download } = state;
   const meta = providerMeta[info.provider];
+  const entries = info.entries ?? [];
+  const isList = entries.length > 0;
+  const audioOnly = info.provider === "spotify";
+  // Tous les morceaux sont retenus par défaut ; la carte est recréée à chaque analyse.
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(entries.map((e) => e.id)));
+  const chosen = entries.filter((e) => selected.has(e.id));
+
+  const toggle = (id: string) => setSelected((current) => {
+    const next = new Set(current);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const toggleAll = () => setSelected(chosen.length === entries.length ? new Set() : new Set(entries.map((e) => e.id)));
 
   return (
     <motion.div
@@ -149,9 +164,18 @@ function MediaCard({ state, info }: { state: AnalyzerState; info: MediaInfo }) {
             </div>
 
             <h3 className="mt-1.5 line-clamp-2 text-[17px] font-semibold leading-snug tracking-[-.022em]">{info.title}</h3>
-            {info.category && <p className="mt-1 truncate text-[12px] text-[var(--faint)]">{info.category}</p>}
+            {(info.category || isList) && (
+              <p className="mt-1 truncate text-[12px] text-[var(--faint)]">
+                {[info.category, isList && `${info.total ?? entries.length} morceau${(info.total ?? entries.length) > 1 ? "x" : ""}`].filter(Boolean).join(" · ")}
+              </p>
+            )}
 
             <div className="mt-auto flex flex-wrap items-end gap-2.5 pt-5">
+              {audioOnly ? (
+                <span className="flex h-9 items-center gap-1.5 text-[12.5px] text-[var(--muted)]">
+                  <AudioLines size={13} />Audio, retrouvé sur YouTube
+                </span>
+              ) : (
               <Tabs.Root value={mode} onValueChange={(v) => setMode(v as DownloadMode)}>
                 <Tabs.List aria-label="Type" className="inline-flex h-9 items-center rounded-[11px] border border-[var(--line)] bg-[var(--raised)] p-[3px] shadow-[inset_0_1px_2px_rgb(0_0_0/.06)]">
                   {([["video", "Vidéo", Video], ["audio", "Audio", AudioLines]] as const).map(([v, label, Icon]) => (
@@ -165,8 +189,9 @@ function MediaCard({ state, info }: { state: AnalyzerState; info: MediaInfo }) {
                   ))}
                 </Tabs.List>
               </Tabs.Root>
+              )}
 
-              {mode === "video" && (
+              {mode === "video" && !audioOnly && (
                 <SelectBox
                   value={quality}
                   onChange={setQuality}
@@ -175,12 +200,55 @@ function MediaCard({ state, info }: { state: AnalyzerState; info: MediaInfo }) {
                 />
               )}
 
-              <Button className="ml-auto" onClick={download}>
-                <Download size={14} />{info.isLive ? "Enregistrer" : "Télécharger"}
-              </Button>
+              {isList ? (
+                <Button className="ml-auto" onClick={() => download(chosen)} disabled={!chosen.length}>
+                  <Download size={14} />Télécharger {chosen.length} morceau{chosen.length > 1 ? "x" : ""}
+                </Button>
+              ) : (
+                <Button className="ml-auto" onClick={() => download()}>
+                  <Download size={14} />{info.isLive ? "Enregistrer" : "Télécharger"}
+                </Button>
+              )}
             </div>
           </div>
         </div>
+
+        {isList && (
+          <div className="border-t border-[var(--line)]">
+            <div className="flex items-center gap-3 px-4 py-2.5 text-[12px] text-[var(--muted)]">
+              <label className="flex cursor-pointer items-center gap-2.5 font-medium">
+                <input
+                  type="checkbox"
+                  checked={chosen.length === entries.length}
+                  ref={(el) => { if (el) el.indeterminate = chosen.length > 0 && chosen.length < entries.length; }}
+                  onChange={toggleAll}
+                  className="size-3.5 accent-[var(--ink)]"
+                />
+                Tout sélectionner
+              </label>
+              {info.total && info.total > entries.length && (
+                <span className="ml-auto truncate text-[11.5px] text-[var(--faint)]">
+                  Spotify n'expose que les {entries.length} premiers sur {info.total}
+                </span>
+              )}
+            </div>
+            <ul className="max-h-[320px] overflow-y-auto border-t border-[var(--line)] py-1">
+              {entries.map((entry, index) => (
+                <li key={`${entry.id}-${index}`}>
+                  <label className="flex cursor-pointer items-center gap-3 px-4 py-1.5 transition-colors duration-150 hover:bg-[var(--raised)]">
+                    <input type="checkbox" checked={selected.has(entry.id)} onChange={() => toggle(entry.id)} className="size-3.5 shrink-0 accent-[var(--ink)]" />
+                    <span className="mono w-6 shrink-0 text-right text-[11px] text-[var(--faint)]">{index + 1}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] text-[var(--ink)]">{entry.title}</span>
+                      <span className="block truncate text-[11.5px] text-[var(--muted)]">{entry.artist}</span>
+                    </span>
+                    {entry.duration > 0 && <span className="mono shrink-0 text-[11px] text-[var(--faint)]">{formatDuration(entry.duration)}</span>}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </Card>
     </motion.div>
   );

@@ -8,6 +8,11 @@
 
    Écrit `body` dans GITHUB_OUTPUT quand la variable existe, sur la sortie
    standard sinon, ce qui permet de vérifier le rendu en local.
+
+   Écrit aussi `notes-file`, un fichier ne contenant que les changements :
+   l'installation et la licence n'ont rien à faire dans la fenêtre de mise à
+   jour, et les clients antérieurs à 1.0.3 affichent ces notes en brut. Le
+   workflow s'en sert pour réécrire `notes` dans latest.json.
    */
 import fs from "node:fs";
 import path from "node:path";
@@ -54,6 +59,9 @@ if (process.env.GITHUB_OUTPUT) {
   // Délimiteur improbable dans le corps, exigé par GitHub pour les valeurs multilignes.
   const marker = "RUSHES_RELEASE_NOTES_EOF";
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `body<<${marker}\n${body}\n${marker}\n`);
+  const notesFile = path.join(process.env.RUNNER_TEMP || root, "update-notes.md");
+  fs.writeFileSync(notesFile, `${changes}\n`);
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, `notes-file=${notesFile}\n`);
   console.log(`[notes] version ${version}, ${changes.split("\n").length} lignes de changements`);
 } else {
   process.stdout.write(body);

@@ -5,9 +5,15 @@ export type DownloadState = "queued" | "preparing" | "downloading" | "paused" | 
 export type DownloadMode = "video" | "audio";
 
 export interface QualityOption { id: string; label: string; detail?: string; height?: number; fps?: number; }
+/** Morceau d'un album, d'une playlist ou d'un artiste Spotify. Durée en secondes. */
+export interface TrackEntry { id: string; url: string; title: string; artist: string; duration: number; }
 export interface MediaInfo {
   url: string; provider: Provider; mediaType: MediaType; id: string; title: string; author: string; category?: string;
   duration: number; thumbnail?: string; isLive: boolean; qualities: QualityOption[];
+  /** Vide sauf pour une liste Spotify. */
+  entries?: TrackEntry[];
+  /** Nombre réel de morceaux quand Spotify n'en expose qu'une partie. */
+  total?: number;
 }
 export interface DownloadTask {
   id: string; url: string; provider: Provider; title: string; author: string; thumbnail?: string; quality: string; mode: DownloadMode;
@@ -17,6 +23,8 @@ export interface DownloadTask {
 export interface DownloadRequest {
   url: string; provider: Provider; title: string; author: string; thumbnail?: string; quality: string; mediaType: MediaType;
   speedProfile: Settings["speedProfile"]; mode: DownloadMode; audioFormat?: Settings["audioFormat"]; container?: Settings["container"];
+  /** Durée attendue en secondes, pour choisir la bonne version d'un morceau Spotify. */
+  duration?: number;
 }
 export interface Settings {
   outputDir: string; theme: "dark" | "light" | "system"; reducedMotion: boolean; quality: string;

@@ -1,6 +1,6 @@
 [package]
 name = "rushes"
-version = "1.0.3"
+version = "1.0.4"
 description = "Multi-platform media downloader for Twitch, YouTube and TikTok"
 authors = ["ZenoX HQ <https://zenoxhq.fr>"]
 homepage = "https://zenoxhq.fr"

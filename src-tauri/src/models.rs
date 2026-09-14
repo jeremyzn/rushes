@@ -24,6 +24,12 @@ pub struct MediaInfo {
     pub thumbnail: String,
     pub is_live: bool,
     pub qualities: Vec<QualityOption>,
+    /// Morceaux d'un album, d'une playlist ou d'un artiste Spotify. Vide ailleurs.
+    #[serde(default)]
+    pub entries: Vec<crate::spotify::Entry>,
+    /// Nombre réel de morceaux quand Spotify n'a pas tout exposé.
+    #[serde(default)]
+    pub total: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -40,6 +46,13 @@ pub struct DownloadRequest {
     pub mode: String,
     pub audio_format: Option<String>,
     pub container: Option<String>,
+    /// Durée attendue en secondes : sert à choisir la bonne version d'un morceau Spotify.
+    #[serde(default)]
+    pub duration: Option<f64>,
+    /// Vidéo YouTube retenue pour un morceau Spotify, mémorisée pour que la reprise
+    /// poursuive le même fichier.
+    #[serde(default)]
+    pub resolved_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
