@@ -6,7 +6,7 @@ Rushes est une application desktop **Windows 10/11 + macOS** pour télécharger 
 
 L’utilisateur final n’a **aucune commande à lancer** et n’installe ni Python, ni Node, ni Homebrew :
 
-- **macOS Apple Silicon** : ouvre le `.dmg`, glisse Rushes dans Applications, puis **clic droit sur l’app → Ouvrir** au premier lancement (voir « macOS : app non signée » ci-dessous).
+- **macOS Apple Silicon** : ouvre le `.dmg`, glisse Rushes dans Applications, puis lance une fois `xattr -cr /Applications/Rushes.app` dans le Terminal (voir « macOS : app non signée » ci-dessous).
 - **Windows 10/11 x64** : double-clique le setup `.exe` (NSIS) ou le `.msi`, puis lance Rushes depuis le menu Démarrer.
 - L’installateur Windows récupère le runtime WebView2 auprès de Microsoft s’il manque, ce qui allège le téléchargement d’environ 130 Mo. Windows 11 et les Windows 10 à jour l’ont déjà, l’étape est alors invisible. Une connexion est requise pendant l’installation.
 
@@ -101,14 +101,15 @@ Secrets GitHub nécessaires pour publier des mises à jour signées :
 
 Les builds macOS ne sont **ni signés ni notarisés** : cela demanderait un compte Apple Developer payant (99 €/an). L’updater Tauri reste signé (minisign), indépendant d’Apple.
 
-Conséquence au premier lancement, macOS affiche « Rushes ne peut pas être ouvert » ou « Rushes est endommagé ». Deux contournements :
+Conséquence au premier lancement, macOS affiche « Rushes est endommagé et ne peut pas être ouvert ». L’application n’est pas endommagée : macOS pose un attribut de quarantaine sur tout fichier venu d’Internet et refuse d’exécuter un programme non signé qui le porte.
 
-- **clic droit sur Rushes.app → Ouvrir**, puis confirmer (à faire une seule fois)
-- ou, si le message « endommagé » persiste, retirer l’attribut de quarantaine :
+Le remède, une seule fois après avoir glissé l’app dans Applications :
 
 ```bash
 xattr -cr /Applications/Rushes.app
 ```
+
+Le clic droit puis **Ouvrir** ne suffit pas ici. Ce contournement ne vaut que pour le message « développeur non identifié », qui concerne les applications signées mais non notariées.
 
 Pour supprimer complètement cet avertissement, il faudrait ajouter les secrets Developer ID / notarisation (`APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID`) et les réinjecter dans l’étape `tauri-action` du workflow.
 

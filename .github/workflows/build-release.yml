@@ -53,11 +53,13 @@ jobs:
 
             **macOS Apple Silicon** : télécharge `Rushes_aarch64.dmg`, glisse Rushes dans Applications.
 
-            > L'application n'est pas signée par Apple (la signature exige un compte Apple Developer payant). Au premier lancement, macOS affiche une alerte. Fais un **clic droit sur Rushes.app → Ouvrir**, puis confirme. C'est à faire une seule fois.
-            > Si le message « Rushes est endommagé » persiste, exécute dans le Terminal :
+            > **Première ouverture sur macOS.** L'application n'est pas signée par Apple, cette signature exigeant un compte développeur payant. macOS affiche donc « Rushes est endommagé et ne peut pas être ouvert ». L'application n'est pas endommagée : macOS refuse par principe un programme non signé qui vient d'Internet.
+            >
+            > Glisse d'abord Rushes dans Applications, puis exécute cette commande une seule fois dans le Terminal :
             > ```
             > xattr -cr /Applications/Rushes.app
             > ```
+            > Rushes s'ouvre ensuite normalement, y compris après les mises à jour. Le clic droit puis Ouvrir ne suffit pas pour ce message précis.
 
             Les mises à jour suivantes sont automatiques et signées.
 
