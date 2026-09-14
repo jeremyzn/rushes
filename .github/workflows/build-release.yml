@@ -35,6 +35,10 @@ jobs:
         run: node scripts/configure-release.mjs
         env:
           TAURI_UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
+      - name: Composer les notes de version
+        id: notes
+        shell: bash
+        run: node scripts/release-notes.mjs
       - name: Build and publish installers
         uses: tauri-apps/tauri-action@v1
         env:
@@ -51,26 +55,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "Rushes v__VERSION__"
-          releaseBody: |
-            ## Installation
-
-            **Windows 10/11 x64** : télécharge `Rushes_x64-setup.exe` (ou le `.msi`), lance-le, puis ouvre Rushes depuis le menu Démarrer. Une connexion est requise pendant l'installation, le temps de vérifier le runtime WebView2.
-
-            **macOS Apple Silicon** : télécharge `Rushes_aarch64.dmg`, glisse Rushes dans Applications.
-
-            > **Première ouverture sur macOS.** L'application n'est pas signée par Apple, cette signature exigeant un compte développeur payant. macOS affiche donc « Rushes est endommagé et ne peut pas être ouvert ». L'application n'est pas endommagée : macOS refuse par principe un programme non signé qui vient d'Internet.
-            >
-            > Glisse d'abord Rushes dans Applications, puis exécute cette commande une seule fois dans le Terminal :
-            > ```
-            > xattr -cr /Applications/Rushes.app
-            > ```
-            > Rushes s'ouvre ensuite normalement, y compris après les mises à jour. Le clic droit puis Ouvrir ne suffit pas pour ce message précis.
-
-            Les mises à jour suivantes sont automatiques et signées.
-
-            ## Licence
-
-            Rushes est un logiciel propriétaire. © 2026 ZenoX HQ, tous droits réservés. L'usage des binaires officiels est gratuit et le restera. En revanche, la copie du code, le fork, la redistribution et le rebranding sont interdits. Voir [LICENSE](https://github.com/jeremyzn/rushes/blob/main/LICENSE) et les [notices tierces](https://github.com/jeremyzn/rushes/blob/main/THIRD-PARTY-NOTICES.md).
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: true
           prerelease: false
           retryAttempts: 2

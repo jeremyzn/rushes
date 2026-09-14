@@ -16,6 +16,7 @@ import { AppHeader } from "./components/AppHeader";
 import { providerMeta } from "./components/providers";
 import { NetworkBanner } from "./components/NetworkBanner";
 import { CommandPalette, type Command as Cmd } from "./components/CommandPalette";
+import { Markdown } from "./components/markdown";
 import type { AnalyzerState } from "./components/UrlAnalyzer";
 import { Button } from "./components/ui/button";
 import { Progress } from "./components/ui/progress";
@@ -378,8 +379,11 @@ export default function App() {
             title={`Rushes ${updateDialog?.version || ""}`}
             description="Une nouvelle version signée est disponible."
           >
-            <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--raised)] p-3.5 text-[13px] leading-5 text-[var(--muted)]">
-              <p className="whitespace-pre-line">{updateDialog?.body || "Correctifs et mises à jour des moteurs embarqués."}</p>
+            <div className="mt-4 max-h-[min(42dvh,320px)] overflow-y-auto rounded-xl border border-[var(--line)] bg-[var(--raised)] p-3.5 text-[13px] leading-5 text-[var(--muted)]">
+              <Markdown
+                source={updateDialog?.body || "Correctifs et mises à jour des moteurs embarqués."}
+                className="space-y-2"
+              />
             </div>
             {updateProgress && (
               <div className="mt-4 space-y-2">
