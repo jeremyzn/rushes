@@ -155,6 +155,14 @@ Les moteurs sont préparés automatiquement par `scripts/prepare-engines.mjs` av
 
 Le support effectif d’une URL dépend aussi de la plateforme et de la version de yt-dlp. YouTube, Twitch et TikTok changent régulièrement leurs formats/API internes : c’est précisément pour cela que yt-dlp et Deno peuvent être mis à jour indépendamment de l’application.
 
+## Licence
+
+Rushes est un **logiciel propriétaire** — voir [LICENSE](LICENSE). Tous droits réservés.
+
+Le binaire officiel est libre d'usage, gratuitement, à titre personnel ou professionnel. En revanche, la copie du code source, la modification, le fork, la redistribution et le rebranding sont interdits sans autorisation écrite. Ce dépôt n'est ni libre ni open source, malgré la visibilité de son code.
+
+Les composants tiers embarqués (FFmpeg, yt-dlp, Deno, Tauri, React…) restent soumis à leurs propres licences, listées dans [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). FFmpeg y est redistribué sous GPL-3.0-or-later : son code source correspondant est référencé dans ce fichier, comme la licence l'exige.
+
 ## Utilisation responsable
 
 Télécharge uniquement des médias que tu possèdes ou que tu as le droit / l’autorisation légale d’enregistrer.

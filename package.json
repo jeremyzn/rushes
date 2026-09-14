@@ -2,6 +2,10 @@
   "name": "rushes",
   "private": true,
   "version": "1.0.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "ZenoX HQ (https://zenoxhq.fr)",
+  "homepage": "https://zenoxhq.fr",
+  "repository": { "type": "git", "url": "https://github.com/jeremyzn/rushes.git" },
   "type": "module",
   "scripts": {
     "dev": "vite",

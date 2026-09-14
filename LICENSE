@@ -1,0 +1,151 @@
+Rushes — Licence propriétaire / Proprietary License
+Copyright (c) 2026 ZenoX HQ — https://zenoxhq.fr
+Tous droits réservés. All rights reserved.
+
+================================================================================
+FRANÇAIS
+================================================================================
+
+1. TITULARITÉ
+
+Rushes (le « Logiciel »), son code source, son interface, ses ressources
+graphiques, sa documentation et sa marque sont la propriété exclusive du
+titulaire du droit d'auteur désigné ci-dessus. Le Logiciel n'est PAS un logiciel
+libre ni open source. Aucun droit autre que ceux expressément accordés à
+l'article 2 n'est concédé, ni explicitement, ni implicitement.
+
+2. DROIT D'USAGE ACCORDÉ
+
+Le titulaire accorde à toute personne une licence personnelle, gratuite, non
+exclusive, non transférable et révocable d'INSTALLER et d'UTILISER les binaires
+officiels du Logiciel, distribués depuis le dépôt officiel, à des fins
+personnelles ou professionnelles internes.
+
+Ce droit d'usage ne s'étend ni au code source, ni à aucune forme de
+redistribution.
+
+3. INTERDICTIONS
+
+Sauf autorisation écrite préalable du titulaire, il est interdit de :
+
+  a. copier, reproduire ou publier le code source du Logiciel, en tout ou
+     partie ;
+  b. modifier le Logiciel, en créer une œuvre dérivée, un fork ou un portage ;
+  c. redistribuer, revendre, louer, sous-licencier ou mettre à disposition le
+     Logiciel ou ses binaires, gratuitement ou non, par quelque canal que ce
+     soit ;
+  d. redistribuer le Logiciel sous un autre nom, une autre marque ou une autre
+     identité visuelle (« rebranding »), ni retirer, masquer ou altérer les
+     mentions de droit d'auteur, de licence, de version ou d'attribution ;
+  e. décompiler, désassembler ou procéder à une rétro-ingénierie du Logiciel,
+     hors des cas où la loi applicable l'autorise impérativement ;
+  f. intégrer le Logiciel, en tout ou partie, dans un autre produit ou service.
+
+4. COMPOSANTS TIERS
+
+Le Logiciel intègre et distribue des composants tiers soumis à leurs propres
+licences, qui prévalent sur la présente licence pour ce qui les concerne. Ces
+composants et leurs licences sont listés dans le fichier THIRD-PARTY-NOTICES.md.
+Rien dans la présente licence ne restreint les droits que ces licences tierces
+vous accordent sur ces composants.
+
+5. RÉSILIATION
+
+Tout manquement aux articles 2 ou 3 met fin automatiquement et immédiatement au
+droit d'usage accordé à l'article 2, sans préavis ni mise en demeure, et sans
+préjudice des recours du titulaire.
+
+6. ABSENCE DE GARANTIE
+
+LE LOGICIEL EST FOURNI « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE, EXPRESSE OU
+IMPLICITE, Y COMPRIS SANS S'Y LIMITER LES GARANTIES DE QUALITÉ MARCHANDE,
+D'ADÉQUATION À UN USAGE PARTICULIER ET D'ABSENCE DE CONTREFAÇON. EN AUCUN CAS LE
+TITULAIRE NE POURRA ÊTRE TENU RESPONSABLE D'UNE QUELCONQUE RÉCLAMATION, D'UN
+DOMMAGE OU D'UNE AUTRE RESPONSABILITÉ, CONTRACTUELLE, DÉLICTUELLE OU AUTRE,
+DÉCOULANT DU LOGICIEL, DE SON UTILISATION OU DE TOUTE AUTRE OPÉRATION LIÉE.
+
+L'utilisateur est seul responsable du respect des conditions d'utilisation des
+services tiers auxquels il accède au moyen du Logiciel, ainsi que des droits
+d'auteur attachés aux contenus qu'il télécharge.
+
+7. AUTORISATIONS ET CONTACT
+
+Toute demande d'autorisation dérogeant aux articles 2 ou 3 doit être adressée au
+titulaire :
+
+  ZenoX HQ — https://zenoxhq.fr
+  Dépôt officiel : https://github.com/jeremyzn/rushes
+
+================================================================================
+ENGLISH
+================================================================================
+
+1. OWNERSHIP
+
+Rushes (the "Software"), including its source code, user interface, assets,
+documentation and name, is the exclusive property of the copyright holder named
+above. The Software is NOT free or open source software. No rights are granted
+other than those expressly stated in Section 2, whether express or implied.
+
+2. GRANT OF USE
+
+The copyright holder grants any person a personal, free of charge,
+non-exclusive, non-transferable and revocable licence to INSTALL and USE the
+official binaries of the Software, as distributed from the official repository,
+for personal or internal business purposes.
+
+This grant extends neither to the source code nor to any form of
+redistribution.
+
+3. RESTRICTIONS
+
+Except with the prior written permission of the copyright holder, you may not:
+
+  a. copy, reproduce or publish the Software's source code, in whole or in
+     part;
+  b. modify the Software, or create any derivative work, fork or port of it;
+  c. redistribute, resell, rent, sublicense or otherwise make the Software or
+     its binaries available, whether for a fee or free of charge, through any
+     channel;
+  d. redistribute the Software under a different name, trademark or visual
+     identity ("rebranding"), nor remove, obscure or alter any copyright,
+     licence, version or attribution notice;
+  e. decompile, disassemble or reverse engineer the Software, except to the
+     extent such restriction is prohibited by applicable law;
+  f. incorporate the Software, in whole or in part, into any other product or
+     service.
+
+4. THIRD-PARTY COMPONENTS
+
+The Software bundles and distributes third-party components governed by their
+own licences, which prevail over this licence as to those components. Those
+components and their licences are listed in THIRD-PARTY-NOTICES.md. Nothing in
+this licence restricts the rights those third-party licences grant you in those
+components.
+
+5. TERMINATION
+
+Any breach of Sections 2 or 3 automatically and immediately terminates the
+grant made in Section 2, without notice, and without prejudice to any other
+remedy available to the copyright holder.
+
+6. NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Users are solely responsible for complying with the terms of service of any
+third-party service accessed through the Software, and with the copyright
+attached to any content they download.
+
+7. PERMISSIONS AND CONTACT
+
+Requests for permission beyond Sections 2 or 3 should be directed to the
+copyright holder:
+
+  ZenoX HQ — https://zenoxhq.fr
+  Official repository: https://github.com/jeremyzn/rushes

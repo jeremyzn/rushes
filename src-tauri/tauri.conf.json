@@ -31,7 +31,10 @@
     "active": true,
     "targets": "all",
     "category": "Video",
-    "publisher": "Rushes",
+    "publisher": "ZenoX HQ",
+    "homepage": "https://zenoxhq.fr",
+    "copyright": "© 2026 ZenoX HQ. Tous droits réservés.",
+    "licenseFile": "../LICENSE",
     "shortDescription": "Téléchargement de vidéos, VOD et directs depuis Twitch, YouTube et TikTok.",
     "longDescription": "Application de bureau pour télécharger VOD, vidéos, clips, Shorts et directs, avec choix de la qualité, reprise, extraction audio, moteurs embarqués et mises à jour signées.",
     "resources": {

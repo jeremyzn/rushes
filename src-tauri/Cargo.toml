@@ -2,7 +2,11 @@
 name = "rushes"
 version = "1.0.0"
 description = "Multi-platform media downloader for Twitch, YouTube and TikTok"
-authors = ["Rushes"]
+authors = ["ZenoX HQ <https://zenoxhq.fr>"]
+homepage = "https://zenoxhq.fr"
+license-file = "../LICENSE"
+# Logiciel propriétaire : interdit toute publication accidentelle sur crates.io.
+publish = false
 edition = "2021"
 
 [lib]

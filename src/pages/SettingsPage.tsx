@@ -105,7 +105,10 @@ export function SettingsPage({ settings, save, chooseFolder, engines, runtime, u
         </Panel>
 
         <div className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[12px] text-[var(--faint)] shadow-[var(--e1)]">
-          <span className="mono">Rushes {runtime?.version} · {runtime?.os} {runtime?.arch}</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="mono">Rushes {runtime?.version} · {runtime?.os} {runtime?.arch}</span>
+            <span>© 2026 ZenoX HQ · zenoxhq.fr · Tous droits réservés</span>
+          </div>
           {import.meta.env.VITE_PROJECT_URL && (
             <Button variant="ghost" size="sm" className="ml-auto" onClick={() => void openExternal(import.meta.env.VITE_PROJECT_URL)}>
               <Github size={13} />Code source
