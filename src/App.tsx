@@ -4,7 +4,7 @@ import { toast, Toaster } from "sonner";
 import { Broom, ClipboardPaste, Download, FolderOpen, Laptop2, LoaderCircle, Moon, RefreshCw, Sun } from "./components/icons";
 import {
   analyzeUrl, clearFinished, engineStatus, isDemo, listDownloads, loadSettings, removeTask, runtimeInfo,
-  saveSettings, startDownload, taskAction, updateEngines,
+  installJsRuntime, removeJsRuntime, saveSettings, startDownload, taskAction, updateEngines,
 } from "./lib/backend";
 import {
   checkForUpdate, notify, openPath, pickFolder, relaunchApp, revealItemInDir,
@@ -52,11 +52,13 @@ export default function App() {
   const [runtime, setRuntime] = useState<RuntimeInfo | null>(null);
   const [updateBusy, setUpdateBusy] = useState(false);
   const [engineBusy, setEngineBusy] = useState(false);
+  const [jsRuntimeBusy, setJsRuntimeBusy] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<{ downloaded: number; total?: number } | null>(null);
   const [updateDialog, setUpdateDialog] = useState<{ version: string; body?: string; update: AppUpdate } | null>(null);
 
   const previousStates = useRef<Record<string, string>>({});
+  const jsRuntimeOffered = useRef(false);
   const settingsRef = useRef<Settings | null>(null);
   const engineAutoChecked = useRef(false);
   const urlInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +96,19 @@ export default function App() {
     const timer = setInterval(() => void look(), 6 * 60 * 60 * 1000);
     return () => { cancelled = true; clearInterval(timer); };
   }, [settings?.autoCheckUpdates, runtime?.updaterEnabled]);
+
+  // Proposé une seule fois par session, et seulement si le moteur manque vraiment.
+  useEffect(() => {
+    if (!engines.length || jsRuntimeOffered.current || !network.online || jsRuntimeBusy) return;
+    const js = engines.find((e) => e.name === "Deno");
+    if (!js || js.available) return;
+    jsRuntimeOffered.current = true;
+    toast("Moteur JavaScript manquant", {
+      description: "YouTube en a besoin pour proposer toutes les qualités. Environ 40 Mo à télécharger.",
+      duration: 12000,
+      action: { label: "Installer", onClick: () => void installJsRuntimeNow() },
+    });
+  }, [engines, network.online, jsRuntimeBusy]);
 
   useEffect(() => {
     if (!settings?.autoUpdateEngines || !network.online || engineAutoChecked.current) return;
@@ -242,6 +257,30 @@ export default function App() {
     finally { setEngineBusy(false); }
   }
 
+  // Deno n'est plus embarqué : il pèse à lui seul un tiers de l'installateur et ne
+  // sert qu'à YouTube. On le récupère à la demande.
+  async function installJsRuntimeNow() {
+    if (!network.online) { toast.error("Connexion Internet requise"); return; }
+    setJsRuntimeBusy(true);
+    try {
+      const version = await installJsRuntime();
+      setEngines(await engineStatus());
+      toast.success("Moteur JavaScript installé", { description: version });
+    } catch (e) { toast.error("Installation impossible", { description: String(e) }); }
+    finally { setJsRuntimeBusy(false); }
+  }
+
+  async function removeJsRuntimeNow() {
+    setJsRuntimeBusy(true);
+    try {
+      await removeJsRuntime();
+      setEngines(await engineStatus());
+      jsRuntimeOffered.current = true;
+      toast.success("Moteur JavaScript supprimé", { description: "YouTube proposera moins de qualités." });
+    } catch (e) { toast.error("Suppression impossible", { description: String(e) }); }
+    finally { setJsRuntimeBusy(false); }
+  }
+
   async function checkUpdateManually() {
     if (!runtime?.updaterEnabled) {
       toast.info("Mises à jour désactivées", { description: "Cette version n'est reliée à aucun canal de publication signé." });
@@ -318,6 +357,7 @@ export default function App() {
                   <SettingsPage
                     settings={settings} save={save} chooseFolder={chooseFolder} engines={engines} runtime={runtime}
                     updateBusy={updateBusy} engineBusy={engineBusy} checkUpdate={checkUpdateManually}
+                    jsRuntimeBusy={jsRuntimeBusy} installJs={() => void installJsRuntimeNow()} removeJs={() => void removeJsRuntimeNow()}
                     updateEngines={updateAllEngines} online={network.online}
                   />
                 )}

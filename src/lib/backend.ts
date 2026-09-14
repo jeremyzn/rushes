@@ -63,6 +63,16 @@ export const updateEngines = bridge(
   demo.updateEngines,
 );
 
+export const installJsRuntime = bridge(
+  (): Promise<string> => invoke("install_js_runtime"),
+  demo.installJsRuntime,
+);
+
+export const removeJsRuntime = bridge(
+  async () => { await invoke("remove_js_runtime"); },
+  demo.removeJsRuntime,
+);
+
 export const networkStatus = bridge(
   (): Promise<NetworkStatus> => invoke("network_status"),
   demo.networkStatus,

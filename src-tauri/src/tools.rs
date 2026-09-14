@@ -70,3 +70,14 @@ pub async fn version(path: &Path, args: &[&str]) -> String {
 }
 
 pub fn threads_for(profile: &str) -> u8 { match profile { "eco"=>2, "normal"=>4, "turbo"=>8, "max"=>10, _=>6 } }
+
+/// Cible Deno correspondant à la plateforme courante, ou `None` si elle n'est pas publiée.
+pub fn deno_target() -> Option<&'static str> {
+    match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("macos", "aarch64") => Some("aarch64-apple-darwin"),
+        ("macos", "x86_64") => Some("x86_64-apple-darwin"),
+        ("windows", "x86_64") => Some("x86_64-pc-windows-msvc"),
+        ("windows", "aarch64") => Some("aarch64-pc-windows-msvc"),
+        _ => None,
+    }
+}

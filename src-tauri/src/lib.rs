@@ -10,7 +10,7 @@ pub fn run(){
       .plugin(tauri_plugin_os::init())
       .plugin(tauri_plugin_notification::init())
       .manage(AppState::default())
-      .invoke_handler(tauri::generate_handler![commands::analyze_url,commands::start_download,commands::list_downloads,commands::task_action,commands::remove_task,commands::clear_finished,commands::load_settings,commands::save_settings,commands::engine_status,commands::update_engines,commands::network_status,commands::runtime_info])
+      .invoke_handler(tauri::generate_handler![commands::analyze_url,commands::start_download,commands::list_downloads,commands::task_action,commands::remove_task,commands::clear_finished,commands::load_settings,commands::save_settings,commands::engine_status,commands::update_engines,commands::install_js_runtime,commands::remove_js_runtime,commands::network_status,commands::runtime_info])
       .setup(|app|{
         // La config `plugins.updater` n'existe qu'en release (tauri.release.conf.json) : sans elle le plugin panique au démarrage.
         if app.config().plugins.0.contains_key("updater") { app.handle().plugin(tauri_plugin_updater::Builder::new().build())?; }

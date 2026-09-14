@@ -39,16 +39,20 @@ else if (platform === "win32") ytdlpAsset = arch === "arm64" ? "yt-dlp_arm64.exe
 else throw new Error(`Unsupported build platform: ${platform}`);
 await ensureFile(`yt-dlp${ext}`, `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${ytdlpAsset}`);
 
-// Deno is the recommended JS runtime for full YouTube support in yt-dlp.
-const denoTriple = platform === "darwin"
-  ? (arch === "arm64" ? "aarch64-apple-darwin" : "x86_64-apple-darwin")
-  : (arch === "arm64" ? "aarch64-pc-windows-msvc" : "x86_64-pc-windows-msvc");
-const denoZip = path.join(out, ".deno.zip");
-if (!fs.existsSync(path.join(out, `deno${ext}`)) || process.env.RUSHES_REFRESH_ENGINES === "1") {
-  await download(`https://github.com/denoland/deno/releases/latest/download/deno-${denoTriple}.zip`, denoZip);
-  const zip = new AdmZip(denoZip); zip.extractAllTo(out, true); fs.rmSync(denoZip, { force: true });
+// Deno pesait 77 Mo pour ne servir qu'à YouTube : l'application le télécharge
+// désormais à la demande (commande install_js_runtime). Poser RUSHES_BUNDLE_DENO=1
+// pour le réintégrer au paquet, par exemple pour une distribution hors ligne.
+if (process.env.RUSHES_BUNDLE_DENO === "1") {
+  const denoTriple = platform === "darwin"
+    ? (arch === "arm64" ? "aarch64-apple-darwin" : "x86_64-apple-darwin")
+    : (arch === "arm64" ? "aarch64-pc-windows-msvc" : "x86_64-pc-windows-msvc");
+  const denoZip = path.join(out, ".deno.zip");
+  if (!fs.existsSync(path.join(out, `deno${ext}`)) || process.env.RUSHES_REFRESH_ENGINES === "1") {
+    await download(`https://github.com/denoland/deno/releases/latest/download/deno-${denoTriple}.zip`, denoZip);
+    const zip = new AdmZip(denoZip); zip.extractAllTo(out, true); fs.rmSync(denoZip, { force: true });
+  }
+  executable(path.join(out, `deno${ext}`));
 }
-executable(path.join(out, `deno${ext}`));
 
 
 fs.writeFileSync(path.join(out, "engines.json"), JSON.stringify({ generatedAt: new Date().toISOString(), platform, arch }, null, 2));

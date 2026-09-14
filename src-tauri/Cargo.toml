@@ -38,3 +38,4 @@ regex = "1"
 which = "8"
 parking_lot = "0.12"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+zip = { version = "4", default-features = false, features = ["deflate"] }

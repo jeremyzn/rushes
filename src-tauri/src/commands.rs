@@ -215,6 +215,43 @@ pub async fn update_engines()->Result<String,String>{
 }
 
 #[tauri::command]
+pub async fn install_js_runtime()->Result<String,String>{
+    let target=tools::deno_target().ok_or("Aucun moteur JavaScript n'est publié pour cette plateforme.")?;
+    let url=format!("https://github.com/denoland/deno/releases/latest/download/deno-{target}.zip");
+    let client=reqwest::Client::builder().timeout(Duration::from_secs(600)).build().map_err(|e|e.to_string())?;
+    let response=client.get(&url).header("User-Agent","Rushes").send().await.map_err(|e|friendly_error(&e.to_string()))?;
+    if !response.status().is_success(){return Err(format!("Téléchargement refusé par GitHub ({}).",response.status()))}
+    let archive=response.bytes().await.map_err(|e|friendly_error(&e.to_string()))?;
+
+    tools::ensure_dirs().map_err(|e|e.to_string())?;
+    let binary=tools::engine_name("deno");
+    let destination=tools::engines_dir().join(&binary);
+    // L'extraction est bloquante : la sortir du runtime évite de figer l'interface.
+    let bytes=archive.to_vec();
+    tauri::async_runtime::spawn_blocking(move||->Result<(),String>{
+        let mut zip=zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(|e|format!("Archive illisible: {e}"))?;
+        let mut entry=zip.by_name(&binary).map_err(|_|"Le binaire attendu est absent de l'archive.".to_string())?;
+        let mut file=std::fs::File::create(&destination).map_err(|e|e.to_string())?;
+        std::io::copy(&mut entry,&mut file).map_err(|e|e.to_string())?;
+        #[cfg(unix)] {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&destination,std::fs::Permissions::from_mode(0o755)).map_err(|e|e.to_string())?;
+        }
+        Ok(())
+    }).await.map_err(|e|e.to_string())??;
+
+    let installed=tools::find_tool("deno").ok_or("Installation terminée mais le binaire reste introuvable.")?;
+    Ok(tools::version(&installed,&["--version"]).await)
+}
+
+#[tauri::command]
+pub fn remove_js_runtime()->Result<(),String>{
+    let path=tools::engines_dir().join(tools::engine_name("deno"));
+    if path.exists(){fs::remove_file(&path).map_err(|e|e.to_string())?}
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn network_status()->NetworkStatus{
     let start=Instant::now();
     let client=reqwest::Client::builder().timeout(Duration::from_secs(3)).build();

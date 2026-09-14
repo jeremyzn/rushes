@@ -337,3 +337,13 @@ export async function networkStatus(): Promise<NetworkStatus> {
 export async function runtimeInfo() {
   return { os: "navigateur", arch: navigator.platform || "web", version: "1.0.0", updaterEnabled: false };
 }
+
+/** Démo navigateur : l'installation du moteur JavaScript n'a rien à télécharger. */
+export async function installJsRuntime(): Promise<string> {
+  await new Promise((r) => setTimeout(r, 600));
+  return "deno 2.6.1 (démo navigateur)";
+}
+
+export async function removeJsRuntime(): Promise<void> {
+  await new Promise((r) => setTimeout(r, 200));
+}

@@ -52,7 +52,7 @@ Rushes n’implémente aucun contournement DRM.
 Le build place directement dans l’application :
 
 - `yt-dlp` : moteur principal Twitch / YouTube / TikTok
-- `Deno` : runtime JavaScript pour le support YouTube moderne de yt-dlp
+- `Deno` : runtime JavaScript requis par yt-dlp pour YouTube. Il n'est pas embarqué, car il pèse 77 Mo pour ce seul usage. L'application le propose au premier lancement et le bouton reste disponible dans Réglages > Moteurs.
 - `FFmpeg` + `FFprobe` : fusion audio/vidéo, remux, extraction audio
 
 Au premier lancement, ces moteurs sont copiés dans le dossier de données de Rushes. L’utilisateur n’a rien à installer.
@@ -60,7 +60,8 @@ Au premier lancement, ces moteurs sont copiés dans le dossier de données de Ru
 ### Mises à jour des moteurs
 
 - yt-dlp : mise à jour intégrée (`-U`)
-- Deno / FFmpeg : remplacés avec les nouvelles versions de Rushes (le binaire Deno officiel n’inclut pas `deno upgrade`)
+- FFmpeg : remplacé avec les nouvelles versions de Rushes
+- Deno : installé et supprimé à la demande depuis les réglages
 - option de vérification automatique des moteurs lorsque la connexion est disponible
 
 ## Hors connexion
@@ -151,7 +152,7 @@ Les moteurs sont préparés automatiquement par `scripts/prepare-engines.mjs` av
 
 ## Limites
 
-Le support effectif d’une URL dépend aussi de la plateforme et de la version de yt-dlp. YouTube, Twitch et TikTok changent régulièrement leurs formats/API internes : c’est précisément pour cela que yt-dlp et Deno peuvent être mis à jour indépendamment de l’application.
+Le support effectif d’une URL dépend aussi de la plateforme et de la version de yt-dlp. YouTube, Twitch et TikTok changent régulièrement leurs formats/API internes : c’est précisément pour cela que yt-dlp peut être mis à jour indépendamment de l’application.
 
 ## Licence
 
@@ -159,7 +160,7 @@ Rushes est un **logiciel propriétaire**, voir [LICENSE](LICENSE). Tous droits r
 
 Le binaire officiel est libre d'usage, gratuitement, à titre personnel ou professionnel. En revanche, la copie du code source, la modification, le fork, la redistribution et le rebranding sont interdits sans autorisation écrite. Ce dépôt n'est ni libre ni open source, malgré la visibilité de son code.
 
-Les composants tiers embarqués (FFmpeg, yt-dlp, Deno, Tauri, React…) restent soumis à leurs propres licences, listées dans [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). FFmpeg y est redistribué sous GPL-3.0-or-later : son code source correspondant est référencé dans ce fichier, comme la licence l'exige.
+Les composants tiers embarqués ou téléchargés (FFmpeg, yt-dlp, Deno, Tauri, React…) restent soumis à leurs propres licences, listées dans [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). FFmpeg y est redistribué sous GPL-3.0-or-later : son code source correspondant est référencé dans ce fichier, comme la licence l'exige.
 
 ## Utilisation responsable
 

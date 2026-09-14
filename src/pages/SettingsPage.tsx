@@ -7,10 +7,11 @@ import { SelectBox } from "../components/ui/select";
 import { Switch } from "../components/ui/switch";
 import type { EngineStatus, RuntimeInfo, Settings } from "../types";
 
-export function SettingsPage({ settings, save, chooseFolder, engines, runtime, updateBusy, engineBusy, checkUpdate, updateEngines, online }: {
+export function SettingsPage({ settings, save, chooseFolder, engines, runtime, updateBusy, engineBusy, checkUpdate, updateEngines, online, jsRuntimeBusy, installJs, removeJs }: {
   settings: Settings; save: (p: Partial<Settings>) => Promise<void>; chooseFolder: () => void;
   engines: EngineStatus[]; runtime: RuntimeInfo | null; updateBusy: boolean; engineBusy: boolean;
   checkUpdate: () => void; updateEngines: () => void; online: boolean;
+  jsRuntimeBusy: boolean; installJs: () => void; removeJs: () => void;
 }) {
   const updaterEnabled = !!runtime?.updaterEnabled;
   const updateDescription = !updaterEnabled
@@ -88,14 +89,23 @@ export function SettingsPage({ settings, save, chooseFolder, engines, runtime, u
           </Row>
         </Panel>
 
-        <Panel title="Moteurs" description="Binaires embarqués dans l'application, mis à jour indépendamment d'elle." icon={<HardDrive size={12} />}>
+        <Panel title="Moteurs" description="Binaires embarqués dans l'application. Le moteur JavaScript est téléchargé à la demande, pour alléger l'installation." icon={<HardDrive size={12} />}>
           {engines.map((e) => (
-            <Row key={e.name} title={e.name} description={e.path || "Introuvable"}>
+            <Row
+              key={e.name}
+              title={e.name}
+              description={e.name === "Deno" && !e.available
+                ? "Moteur JavaScript requis par YouTube, téléchargé à la demande"
+                : e.path || "Introuvable"}
+            >
               <div className="flex items-center gap-2">
                 <span className="mono text-[11.5px] text-[var(--muted)]">{e.available ? (e.version.length > 28 ? `${e.version.slice(0, 28)}…` : e.version) : ""}</span>
                 {e.available
                   ? e.bundled ? <Badge>Intégré</Badge> : <Badge>Système</Badge>
                   : <Badge className="border-transparent bg-[var(--bad)]/12 text-[var(--bad)]">Absent</Badge>}
+                {e.name === "Deno" && (e.available
+                  ? e.bundled && <Button variant="ghost" size="sm" onClick={removeJs} busy={jsRuntimeBusy}>Supprimer</Button>
+                  : <Button variant="secondary" size="sm" onClick={installJs} busy={jsRuntimeBusy} disabled={!online}><Download size={14} />Installer</Button>)}
               </div>
             </Row>
           ))}
