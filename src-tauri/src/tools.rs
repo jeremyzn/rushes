@@ -63,9 +63,3 @@ pub async fn version(path: &Path, args: &[&str]) -> String {
 }
 
 pub fn threads_for(profile: &str) -> u8 { match profile { "eco"=>2, "normal"=>4, "turbo"=>8, "max"=>10, _=>6 } }
-
-pub fn sanitize_filename(input: &str) -> String {
-    let invalid = ['<','>',':','"','/','\\','|','?','*'];
-    let cleaned: String = input.chars().map(|c| if invalid.contains(&c) || c.is_control() { '_' } else { c }).collect();
-    cleaned.trim().chars().take(120).collect::<String>()
-}
