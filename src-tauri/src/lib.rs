@@ -1,4 +1,4 @@
-mod commands;mod models;mod state;mod tools;
+mod commands;mod models;mod spotify;mod state;mod tools;
 use state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

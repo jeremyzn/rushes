@@ -4,6 +4,21 @@ Les sections de ce fichier alimentent les notes publiées sur GitHub et la fenê
 de mise à jour de l'application. Le titre de chaque version doit rester au format
 `## 1.2.3`, c'est lui qui sert de repère à `scripts/release-notes.mjs`.
 
+## 1.0.3
+
+### Musique
+
+- Les liens Spotify sont pris en charge. Spotify chiffre ses flux et Rushes ne contourne aucune protection : le morceau est identifié par ses métadonnées publiques (titre, artiste, pochette), puis l'audio est récupéré depuis YouTube, comme le fait spotDL. Le mode audio est sélectionné automatiquement.
+- Pour l'instant, seuls les liens d'un morceau sont acceptés. Les albums, playlists et podcasts affichent un message explicite.
+
+### Interface
+
+- La fenêtre de mise à jour affiche enfin les notes de version mises en forme, au lieu du Markdown brut.
+
+### Publication
+
+- Les notes de release contiennent désormais le détail des changements, tirés de CHANGELOG.md, et plus seulement les consignes d'installation.
+
 ## 1.0.2
 
 ### Allègement

@@ -1,4 +1,4 @@
-use crate::{models::*, state::AppState, tools};
+use crate::{models::*, spotify, state::AppState, tools};
 use chrono::Utc;
 use regex::Regex;
 use serde::{de::DeserializeOwned, Serialize};
@@ -40,19 +40,26 @@ fn yt_dlp_base() -> Result<Command,String> {
 
 #[tauri::command]
 pub async fn analyze_url(url:String)->Result<MediaInfo,String>{
+    // Spotify chiffre ses flux : on lit seulement ses métadonnées publiques, puis
+    // l'audio est cherché sur YouTube. Aucune protection n'est contournée.
+    let track=if spotify::is_spotify(&url){Some(spotify::resolve(&url).await?)}else{None};
+    let target=match &track{Some(t)=>spotify::search_query(t),None=>url.clone()};
     let mut cmd=yt_dlp_base()?;
-    cmd.args(["--dump-single-json","--skip-download","--no-playlist","--no-warnings","--ignore-config",&url]);
+    cmd.args(["--dump-single-json","--skip-download","--no-playlist","--no-warnings","--ignore-config",&target]);
     let output=cmd.output().await.map_err(|e|e.to_string())?;
     if !output.status.success(){let err=String::from_utf8_lossy(&output.stderr);return Err(friendly_error(&err))}
     let data:Value=serde_json::from_slice(&output.stdout).map_err(|e|format!("Réponse média invalide: {e}"))?;
-    let provider=provider_from(&url,&data);
+    let provider=if track.is_some(){"spotify".to_string()}else{provider_from(&url,&data)};
     let is_live=data.get("is_live").and_then(Value::as_bool).unwrap_or(false) || matches!(data.get("live_status").and_then(Value::as_str),Some("is_live"));
-    let media_type=if is_live{"live"}else if provider=="twitch"&&url.to_lowercase().contains("clip"){"clip"}else if provider=="twitch"{"vod"}else if (provider=="youtube"&&url.to_lowercase().contains("shorts/"))||provider=="tiktok"{"short"}else{"video"};
+    let media_type=if track.is_some(){"music"}else if is_live{"live"}else if provider=="twitch"&&url.to_lowercase().contains("clip"){"clip"}else if provider=="twitch"{"vod"}else if (provider=="youtube"&&url.to_lowercase().contains("shorts/"))||provider=="tiktok"{"short"}else{"video"};
     let mut quality_map:BTreeMap<(u64,u64),String>=BTreeMap::new();
     if let Some(formats)=data.get("formats").and_then(Value::as_array){for f in formats{let h=f.get("height").and_then(Value::as_u64).unwrap_or(0);if h==0{continue}let fps=f.get("fps").and_then(Value::as_f64).unwrap_or(0.0).round() as u64;let ext=f.get("ext").and_then(Value::as_str).unwrap_or("");let codec=f.get("vcodec").and_then(Value::as_str).unwrap_or("");quality_map.entry((h,fps)).or_insert(format!("{} · {}",ext.to_uppercase(),codec));}}
     let mut qualities=vec![QualityOption{id:"best".into(),label:"Meilleure qualité".into(),detail:Some("Source / automatique".into()),height:None,fps:None}];
     for ((h,fps),detail) in quality_map.into_iter().rev().take(10){let label=if fps>=50{format!("{}p{}",h,fps)}else{format!("{}p",h)};qualities.push(QualityOption{id:label.clone(),label,detail:Some(detail),height:Some(h),fps:Some(fps as f64)});}
-    Ok(MediaInfo{url,provider,media_type:media_type.into(),id:data.get("id").and_then(Value::as_str).unwrap_or("").into(),title:data.get("title").and_then(Value::as_str).unwrap_or("Sans titre").into(),author:data.get("uploader").or_else(||data.get("channel")).and_then(Value::as_str).unwrap_or("Créateur").into(),category:data.get("categories").and_then(Value::as_array).and_then(|a|a.first()).and_then(Value::as_str).unwrap_or("").into(),duration:data.get("duration").and_then(Value::as_f64).unwrap_or(0.0),thumbnail:data.get("thumbnail").and_then(Value::as_str).unwrap_or("").into(),is_live,qualities})
+    let title=match &track{Some(t)=>t.title.clone(),None=>data.get("title").and_then(Value::as_str).unwrap_or("Sans titre").into()};
+    let author=match &track{Some(t) if !t.artist.is_empty()=>t.artist.clone(),_=>data.get("uploader").or_else(||data.get("channel")).and_then(Value::as_str).unwrap_or("Créateur").into()};
+    let thumbnail=match &track{Some(t) if !t.thumbnail.is_empty()=>t.thumbnail.clone(),_=>data.get("thumbnail").and_then(Value::as_str).unwrap_or("").into()};
+    Ok(MediaInfo{url,provider,media_type:media_type.into(),id:data.get("id").and_then(Value::as_str).unwrap_or("").into(),title,author,category:data.get("categories").and_then(Value::as_array).and_then(|a|a.first()).and_then(Value::as_str).unwrap_or("").into(),duration:data.get("duration").and_then(Value::as_f64).unwrap_or(0.0),thumbnail,is_live,qualities})
 }
 
 fn build_download_command(r:&DownloadRequest, settings:&Settings)->Result<Command,String>{
@@ -122,7 +129,15 @@ async fn schedule_queue(state:AppState){
 
 #[tauri::command]
 pub async fn start_download(request:DownloadRequest,state:State<'_,AppState>)->Result<DownloadTask,String>{
-    let settings:Settings=read_json(&tools::settings_path()).unwrap_or_default();let id=Uuid::new_v4().to_string();let task=DownloadTask{id:id.clone(),url:request.url.clone(),provider:request.provider.clone(),title:request.title.clone(),author:request.author.clone(),thumbnail:request.thumbnail.clone(),quality:request.quality.clone(),mode:request.mode.clone(),state:"queued".into(),progress:0.0,speed_bps:0.0,downloaded_bytes:0,total_bytes:None,eta_seconds:None,engine:Some("yt-dlp".into()),error:None,output_path:Some(settings.output_dir.clone()),created_at:Utc::now().to_rfc3339(),media_type:request.media_type.clone(),request:request.clone(),pid:None};
+    // L'affichage conserve le lien collé, le moteur reçoit la requête YouTube.
+    let mut request=request;
+    let source=request.url.clone();
+    if spotify::is_spotify(&request.url){
+        let track=spotify::resolve(&request.url).await?;
+        request.url=spotify::search_query(&track);
+        if request.mode!="audio"{request.mode="audio".into()}
+    }
+    let settings:Settings=read_json(&tools::settings_path()).unwrap_or_default();let id=Uuid::new_v4().to_string();let task=DownloadTask{id:id.clone(),url:source,provider:request.provider.clone(),title:request.title.clone(),author:request.author.clone(),thumbnail:request.thumbnail.clone(),quality:request.quality.clone(),mode:request.mode.clone(),state:"queued".into(),progress:0.0,speed_bps:0.0,downloaded_bytes:0,total_bytes:None,eta_seconds:None,engine:Some("yt-dlp".into()),error:None,output_path:Some(settings.output_dir.clone()),created_at:Utc::now().to_rfc3339(),media_type:request.media_type.clone(),request:request.clone(),pid:None};
     {let mut tasks=state.tasks.lock();tasks.insert(0,task.clone());persist(&tasks)}
     schedule_queue(state.inner().clone()).await;
     Ok(task)

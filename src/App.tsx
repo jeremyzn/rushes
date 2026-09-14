@@ -194,6 +194,8 @@ export default function App() {
     try {
       const media = await analyzeUrl(url.trim());
       setInfo(media); setQuality(media.qualities[0]?.id || "best");
+      // Un lien Spotify désigne un morceau : le téléchargement est audio par nature.
+      if (media.provider === "spotify") setMode("audio");
     } catch (e) { toast.error("Analyse impossible", { description: String(e) }); }
     finally { setAnalyzing(false); }
   }

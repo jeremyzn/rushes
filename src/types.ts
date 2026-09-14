@@ -1,6 +1,6 @@
 export type Page = "home" | "downloads" | "live" | "library" | "history" | "settings";
-export type Provider = "twitch" | "youtube" | "tiktok" | "other";
-export type MediaType = "vod" | "clip" | "live" | "video" | "short";
+export type Provider = "twitch" | "youtube" | "tiktok" | "spotify" | "other";
+export type MediaType = "vod" | "clip" | "live" | "video" | "short" | "music";
 export type DownloadState = "queued" | "preparing" | "downloading" | "paused" | "finalizing" | "completed" | "error" | "cancelled";
 export type DownloadMode = "video" | "audio";
 

@@ -1,6 +1,6 @@
 # Rushes
 
-Rushes est une application desktop **Windows 10/11 + macOS** pour télécharger des médias **Twitch, YouTube et TikTok**, construite avec Tauri 2, Rust, React 19, TypeScript, **Tailwind CSS 4**, **Radix UI** et des composants locaux de style shadcn/ui.
+Rushes est une application desktop **Windows 10/11 + macOS** pour télécharger des médias **Twitch, YouTube, TikTok et Spotify**, construite avec Tauri 2, Rust, React 19, TypeScript, **Tailwind CSS 4**, **Radix UI** et des composants locaux de style shadcn/ui.
 
 ## Expérience utilisateur
 

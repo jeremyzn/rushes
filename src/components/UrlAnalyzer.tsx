@@ -19,7 +19,7 @@ export type AnalyzerState = {
   download: () => void; online: boolean; inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
-const HINTS: Provider[] = ["twitch", "youtube", "tiktok", "other"];
+const HINTS: Provider[] = ["twitch", "youtube", "tiktok", "spotify", "other"];
 
 export function UrlAnalyzer({ state, placeholder }: { state: AnalyzerState; placeholder: string }) {
   const { url, setUrl, analyze, analyzing, info, online, inputRef } = state;
