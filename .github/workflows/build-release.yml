@@ -16,9 +16,6 @@ jobs:
           - platform: macos-15
             args: "--bundles app,dmg"
             label: "macOS Apple Silicon"
-          - platform: macos-15-intel
-            args: "--bundles app,dmg"
-            label: "macOS Intel"
           - platform: windows-latest
             args: "--bundles nsis,msi"
             label: "Windows 10/11 x64"
@@ -54,7 +51,7 @@ jobs:
 
             **Windows 10/11 x64** : télécharge `Rushes_x64-setup.exe` (ou le `.msi`), lance-le, puis ouvre Rushes depuis le menu Démarrer. Le runtime WebView2 est embarqué : aucune connexion requise pendant l'installation.
 
-            **macOS Apple Silicon** : `Rushes_aarch64.dmg` · **macOS Intel** : `Rushes_x64.dmg`
+            **macOS Apple Silicon** : télécharge `Rushes_aarch64.dmg`, glisse Rushes dans Applications.
 
             > L'application n'est pas signée par Apple (la signature exige un compte Apple Developer payant). Au premier lancement, macOS affiche une alerte. Fais un **clic droit sur Rushes.app → Ouvrir**, puis confirme. C'est à faire une seule fois.
             > Si le message « Rushes est endommagé » persiste, exécute dans le Terminal :

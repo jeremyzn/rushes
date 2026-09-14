@@ -6,7 +6,7 @@ Rushes est une application desktop **Windows 10/11 + macOS** pour télécharger 
 
 L’utilisateur final n’a **aucune commande à lancer** et n’installe ni Python, ni Node, ni Homebrew :
 
-- **macOS Apple Silicon / Intel** : ouvre le `.dmg`, glisse Rushes dans Applications, puis **clic droit sur l’app → Ouvrir** au premier lancement (voir « macOS : app non signée » ci-dessous).
+- **macOS Apple Silicon** : ouvre le `.dmg`, glisse Rushes dans Applications, puis **clic droit sur l’app → Ouvrir** au premier lancement (voir « macOS : app non signée » ci-dessous).
 - **Windows 10/11 x64** : double-clique le setup `.exe` (NSIS) ou le `.msi`, puis lance Rushes depuis le menu Démarrer.
 - L’installateur Windows embarque le runtime WebView2 hors-ligne afin de ne pas dépendre d’un téléchargement Microsoft pendant l’installation. Cela rend l’installateur plus lourd, mais plus fiable sans Internet.
 
@@ -112,10 +112,9 @@ xattr -cr /Applications/Rushes.app
 
 Pour supprimer complètement cet avertissement, il faudrait ajouter les secrets Developer ID / notarisation (`APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID`) et les réinjecter dans l’étape `tauri-action` du workflow.
 
-Le workflow utilise trois runners :
+Le workflow utilise deux runners :
 
 - macOS Apple Silicon → `.app` + `.dmg`
-- macOS Intel → `.app` + `.dmg`
 - Windows 10/11 x64 → `.exe` NSIS + `.msi`
 
 ## Interface
