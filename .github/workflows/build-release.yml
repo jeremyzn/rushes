@@ -49,7 +49,7 @@ jobs:
           releaseBody: |
             ## Installation
 
-            **Windows 10/11 x64** : télécharge `Rushes_x64-setup.exe` (ou le `.msi`), lance-le, puis ouvre Rushes depuis le menu Démarrer. Le runtime WebView2 est embarqué : aucune connexion requise pendant l'installation.
+            **Windows 10/11 x64** : télécharge `Rushes_x64-setup.exe` (ou le `.msi`), lance-le, puis ouvre Rushes depuis le menu Démarrer. Une connexion est requise pendant l'installation, le temps de vérifier le runtime WebView2.
 
             **macOS Apple Silicon** : télécharge `Rushes_aarch64.dmg`, glisse Rushes dans Applications.
 

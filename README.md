@@ -8,7 +8,7 @@ L’utilisateur final n’a **aucune commande à lancer** et n’installe ni Pyt
 
 - **macOS Apple Silicon** : ouvre le `.dmg`, glisse Rushes dans Applications, puis **clic droit sur l’app → Ouvrir** au premier lancement (voir « macOS : app non signée » ci-dessous).
 - **Windows 10/11 x64** : double-clique le setup `.exe` (NSIS) ou le `.msi`, puis lance Rushes depuis le menu Démarrer.
-- L’installateur Windows embarque le runtime WebView2 hors-ligne afin de ne pas dépendre d’un téléchargement Microsoft pendant l’installation. Cela rend l’installateur plus lourd, mais plus fiable sans Internet.
+- L’installateur Windows récupère le runtime WebView2 auprès de Microsoft s’il manque, ce qui allège le téléchargement d’environ 130 Mo. Windows 11 et les Windows 10 à jour l’ont déjà, l’étape est alors invisible. Une connexion est requise pendant l’installation.
 
 Les fichiers installables sont générés automatiquement par `.github/workflows/build-release.yml` lors d’un tag `v*` ou d’un lancement manuel du workflow GitHub Actions.
 
