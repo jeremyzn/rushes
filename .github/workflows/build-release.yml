@@ -1,9 +1,10 @@
 name: Build Rushes
 
+# Lancement manuel uniquement. Un déclencheur sur tag se retournerait contre nous :
+# publier une release crée son tag, ce qui relancerait un build de la version déjà
+# distribuée, et tauri-action n'écrit que dans des brouillons.
 on:
   workflow_dispatch:
-  push:
-    tags: ["v*"]
 
 jobs:
   build:
