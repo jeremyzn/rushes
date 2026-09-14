@@ -117,9 +117,12 @@ function Thumbnail({ task, pct, done, onOpen }: { task: DownloadTask; pct: numbe
       {!done && task.progress > 0 && (
         <>
           <span className="absolute inset-x-0 bottom-0 h-[3px] bg-black/45">
+            {/* scaleX plutôt que width : la barre reste sur le compositeur, sans
+                recalcul de mise en page à chaque image pendant tout le téléchargement. */}
             <motion.span
-              className="block h-full bg-white"
-              animate={{ width: `${pct}%` }}
+              className="block h-full w-full origin-left bg-white"
+              initial={false}
+              animate={{ scaleX: pct / 100 }}
               transition={{ duration: .45, ease: [.22, 1, .36, 1] }}
             />
           </span>

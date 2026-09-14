@@ -212,9 +212,9 @@ function GlobalProgress({ value, visible }: { value: number; visible: boolean })
   return (
     <span aria-hidden className="pointer-events-none absolute inset-x-3 bottom-0 h-px overflow-hidden rounded-full">
       <motion.span
-        className="absolute inset-y-0 left-0 bg-[var(--ink)]"
+        className="absolute inset-y-0 left-0 w-full origin-left bg-[var(--ink)]"
         initial={false}
-        animate={{ width: `${visible ? Math.max(2, Math.min(100, value * 100)) : 0}%`, opacity: visible ? 0.55 : 0 }}
+        animate={{ scaleX: visible ? Math.max(.02, Math.min(1, value)) : 0, opacity: visible ? 0.55 : 0 }}
         transition={{ duration: .5, ease: [.22, 1, .36, 1] }}
       />
     </span>
