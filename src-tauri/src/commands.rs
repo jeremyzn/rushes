@@ -59,7 +59,10 @@ fn build_download_command(r:&DownloadRequest, settings:&Settings)->Result<Comman
     let mut c=yt_dlp_base()?; let threads=tools::threads_for(&r.speed_profile);
     c.args(["--ignore-config","--newline","--progress","--no-colors","--continue","--retries","20","--fragment-retries","20","--retry-sleep","http:exp=1:20","--retry-sleep","fragment:exp=1:20","-N",&threads.to_string(),"--no-playlist"]);
     let outdir=PathBuf::from(&settings.output_dir);fs::create_dir_all(&outdir).map_err(|e|e.to_string())?;
-    c.args(["--paths",&outdir.to_string_lossy(),"-o","%(uploader)s - %(title).180B [%(id)s].%(ext)s"]);
+    // Template de sortie en chemin absolu : yt-dlp annonce alors une destination absolue,
+    // seule forme que `openPath` et `revealItemInDir` savent ouvrir côté interface.
+    let template=outdir.join("%(uploader)s - %(title).180B [%(id)s].%(ext)s");
+    c.args(["-o",&template.to_string_lossy()]);
     if settings.download_metadata { c.arg("--write-info-json"); }
     if settings.download_thumbnail { c.arg("--write-thumbnail"); }
     if settings.cookies_browser!="none" { c.args(["--cookies-from-browser",&settings.cookies_browser]); }

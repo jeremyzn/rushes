@@ -43,9 +43,16 @@ pub fn install_bundled_engines(app: &AppHandle) -> Result<(), String> {
         let name = entry.file_name();
         if name.to_string_lossy() == "engines.json" { continue; }
         let dest = engines_dir().join(&name);
-        let n = name.to_string_lossy().to_lowercase();
-        let always_refresh = n.starts_with("ffmpeg") || n.starts_with("ffprobe") || n.starts_with("twitchdownloader");
-        if always_refresh || !dest.exists() { fs::copy(entry.path(), &dest).map_err(|e| e.to_string())?; }
+        // Recopier les ~190 Mo de moteurs à chaque lancement retardait l'ouverture de la
+        // fenêtre d'autant. On ne copie que si la destination diffère de la source, ce qui
+        // n'arrive qu'à la première installation et après une mise à jour de Rushes.
+        let source_meta = entry.metadata().map_err(|e| e.to_string())?;
+        let outdated = match fs::metadata(&dest) {
+            Err(_) => true,
+            Ok(current) => current.len() != source_meta.len()
+                || matches!((source_meta.modified(), current.modified()), (Ok(s), Ok(d)) if s > d),
+        };
+        if outdated { fs::copy(entry.path(), &dest).map_err(|e| e.to_string())?; }
         #[cfg(unix)] {
             use std::os::unix::fs::PermissionsExt;
             let mut permissions = fs::metadata(&dest).map_err(|e| e.to_string())?.permissions();
