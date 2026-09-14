@@ -16,11 +16,29 @@ const arch = process.arch;
 const ext = platform === "win32" ? ".exe" : "";
 const executable = (p) => { if (platform !== "win32") fs.chmodSync(p, 0o755); };
 
-async function download(url, destination) {
+// Les releases GitHub renvoient régulièrement des 5xx passagers. Sans attente entre
+// les tentatives, les trois essais de tauri-action tombent dans la même minute et le
+// build échoue pour une panne qui dure quelques secondes.
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function download(url, destination, attempts = 5) {
   console.log(`[engines] ${url}`);
-  const res = await fetch(url, { headers: { "User-Agent": "Rushes-Build/1.0" }, redirect: "follow" });
-  if (!res.ok) throw new Error(`Download failed ${res.status}: ${url}`);
-  fs.writeFileSync(destination, Buffer.from(await res.arrayBuffer()));
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": "Rushes-Build/1.0" }, redirect: "follow" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      fs.writeFileSync(destination, Buffer.from(await res.arrayBuffer()));
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) break;
+      const delay = 2000 * 2 ** (attempt - 1);
+      console.warn(`[engines] tentative ${attempt}/${attempts} échouée (${error.message}), nouvelle tentative dans ${delay / 1000} s`);
+      await wait(delay);
+    }
+  }
+  throw new Error(`Download failed after ${attempts} attempts (${lastError?.message}): ${url}`);
 }
 async function ensureFile(name, url) {
   const dest = path.join(out, name);
