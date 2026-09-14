@@ -41,8 +41,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          # Pas de signature/notarisation Apple : nécessite un compte Apple Developer payant.
-          # Les builds macOS sont non signés, voir README (contournement Gatekeeper).
+          # Signature ad-hoc, sans certificat ni compte Apple Developer payant. Elle ne
+          # supprime pas l'alerte Gatekeeper, mais scelle le bundle : macOS peut alors
+          # dire « développeur non identifié » plutôt que « endommagé », ce qui se
+          # contourne d'un clic droit au lieu d'une commande dans le Terminal.
+          # Aucun APPLE_CERTIFICATE n'est fourni, donc aucun import de trousseau.
+          APPLE_SIGNING_IDENTITY: "-"
           VITE_PROJECT_URL: https://github.com/${{ github.repository }}
         with:
           tagName: v__VERSION__
