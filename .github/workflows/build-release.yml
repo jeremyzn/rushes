@@ -49,7 +49,24 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "Rushes v__VERSION__"
-          releaseBody: "Rushes desktop release for Windows 10/11 and macOS."
+          releaseBody: |
+            ## Installation
+
+            **Windows 10/11 x64** — télécharge `Rushes_x64-setup.exe` (ou le `.msi`), lance-le, puis ouvre Rushes depuis le menu Démarrer. Le runtime WebView2 est embarqué : aucune connexion requise pendant l'installation.
+
+            **macOS Apple Silicon** — `Rushes_aarch64.dmg` · **macOS Intel** — `Rushes_x64.dmg`
+
+            > L'application n'est pas signée par Apple (la signature exige un compte Apple Developer payant). Au premier lancement, macOS affiche une alerte. Fais un **clic droit sur Rushes.app → Ouvrir**, puis confirme — une seule fois.
+            > Si le message « Rushes est endommagé » persiste, exécute dans le Terminal :
+            > ```
+            > xattr -cr /Applications/Rushes.app
+            > ```
+
+            Les mises à jour suivantes sont automatiques et signées.
+
+            ## Licence
+
+            Rushes est un logiciel propriétaire — © 2026 ZenoX HQ, tous droits réservés. L'usage des binaires officiels est gratuit ; la copie du code, le fork, la redistribution et le rebranding sont interdits. Voir [LICENSE](https://github.com/jeremyzn/rushes/blob/main/LICENSE) et les [notices tierces](https://github.com/jeremyzn/rushes/blob/main/THIRD-PARTY-NOTICES.md).
           releaseDraft: true
           prerelease: false
           retryAttempts: 2
