@@ -98,7 +98,7 @@ impl Default for Settings {
         Self {
             output_dir: output.to_string_lossy().to_string(),
             theme: "dark".into(), reduced_motion: false, quality: "best".into(), speed_profile: "auto".into(),
-            concurrent_downloads: 2, smart_fallback: true, download_metadata: true, download_thumbnail: true,
+            concurrent_downloads: 2, smart_fallback: true, download_metadata: false, download_thumbnail: false,
             notifications: true, auto_check_updates: true, auto_update_engines: true, container: "auto".into(), audio_format: "m4a".into(),
             cookies_browser: "none".into(),
         }

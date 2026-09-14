@@ -50,25 +50,6 @@ if (!fs.existsSync(path.join(out, `deno${ext}`)) || process.env.RUSHES_REFRESH_E
 }
 executable(path.join(out, `deno${ext}`));
 
-// TwitchDownloader is bundled for Twitch-specific extras. yt-dlp remains the universal primary engine.
-try {
-  const release = await fetch("https://api.github.com/repos/lay295/TwitchDownloader/releases/latest", { headers: { "User-Agent": "Rushes-Build/1.0", "Accept": "application/vnd.github+json" } }).then(r => r.json());
-  let needle = null;
-  if (platform === "darwin") needle = arch === "arm64" ? "MacOSArm64.zip" : "MacOS-x64.zip";
-  if (platform === "win32" && arch !== "arm64") needle = "Windows-x64.zip";
-  if (needle) {
-    const asset = release.assets?.find(a => a.name?.startsWith("TwitchDownloaderCLI-") && a.name.endsWith(needle));
-    if (asset) {
-      const target = path.join(out, `TwitchDownloaderCLI${ext}`);
-      if (!fs.existsSync(target) || process.env.RUSHES_REFRESH_ENGINES === "1") {
-        const temp = path.join(out, ".twitchdownloader.zip"); await download(asset.browser_download_url, temp);
-        const zip = new AdmZip(temp); const entry = zip.getEntries().find(e => !e.isDirectory && /TwitchDownloaderCLI(\.exe)?$/i.test(e.entryName));
-        if (entry) fs.writeFileSync(target, entry.getData()); fs.rmSync(temp, { force: true });
-      }
-      if (fs.existsSync(target)) executable(target);
-    }
-  }
-} catch (error) { console.warn("[engines] TwitchDownloader optional bundle failed:", error.message); }
 
 fs.writeFileSync(path.join(out, "engines.json"), JSON.stringify({ generatedAt: new Date().toISOString(), platform, arch }, null, 2));
 console.log(`[engines] Ready in ${out}`);

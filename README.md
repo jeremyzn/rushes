@@ -54,14 +54,13 @@ Le build place directement dans l’application :
 - `yt-dlp` : moteur principal Twitch / YouTube / TikTok
 - `Deno` : runtime JavaScript pour le support YouTube moderne de yt-dlp
 - `FFmpeg` + `FFprobe` : fusion audio/vidéo, remux, extraction audio
-- `TwitchDownloaderCLI` : moteur Twitch spécialisé lorsqu’un binaire compatible existe
 
 Au premier lancement, ces moteurs sont copiés dans le dossier de données de Rushes. L’utilisateur n’a rien à installer.
 
 ### Mises à jour des moteurs
 
 - yt-dlp : mise à jour intégrée (`-U`)
-- Deno / FFmpeg / TwitchDownloader : remplacés avec les nouvelles versions de Rushes (le binaire Deno officiel n’inclut pas `deno upgrade`)
+- Deno / FFmpeg : remplacés avec les nouvelles versions de Rushes (le binaire Deno officiel n’inclut pas `deno upgrade`)
 - option de vérification automatique des moteurs lorsque la connexion est disponible
 
 ## Hors connexion

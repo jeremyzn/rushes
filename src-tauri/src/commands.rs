@@ -205,14 +205,14 @@ pub fn clear_finished(state:State<'_,AppState>)->Result<(),String>{
 #[tauri::command] pub fn save_settings(settings:Settings)->Result<(),String>{write_json(&tools::settings_path(),&settings)}
 
 #[tauri::command]
-pub async fn engine_status()->Vec<EngineStatus>{let specs=[("yt-dlp","yt-dlp",vec!["--version"]),("FFmpeg","ffmpeg",vec!["-version"]),("FFprobe","ffprobe",vec!["-version"]),("Deno","deno",vec!["--version"]),("TwitchDownloader","TwitchDownloaderCLI",vec!["--version"])];let dir=tools::engines_dir();let mut out=vec![];for(name,bin,args)in specs{if let Some(p)=tools::find_tool(bin){out.push(EngineStatus{name:name.into(),version:tools::version(&p,&args).await,available:true,bundled:p.starts_with(&dir),path:Some(p.to_string_lossy().into())})}else{out.push(EngineStatus{name:name.into(),version:String::new(),available:false,bundled:false,path:None})}}out}
+pub async fn engine_status()->Vec<EngineStatus>{let specs=[("yt-dlp","yt-dlp",vec!["--version"]),("FFmpeg","ffmpeg",vec!["-version"]),("FFprobe","ffprobe",vec!["-version"]),("Deno","deno",vec!["--version"])];let dir=tools::engines_dir();let mut out=vec![];for(name,bin,args)in specs{if let Some(p)=tools::find_tool(bin){out.push(EngineStatus{name:name.into(),version:tools::version(&p,&args).await,available:true,bundled:p.starts_with(&dir),path:Some(p.to_string_lossy().into())})}else{out.push(EngineStatus{name:name.into(),version:String::new(),available:false,bundled:false,path:None})}}out}
 
 #[tauri::command]
 pub async fn update_engines()->Result<String,String>{
     let mut notes=Vec::new();
     if let Some(y)=tools::find_tool("yt-dlp"){let s=Command::new(y).arg("-U").status().await.map_err(|e|e.to_string())?;notes.push(format!("yt-dlp: {}",if s.success(){"OK"}else{"à vérifier"}));}
     // Le binaire Deno officiel est compilé sans `deno upgrade` : il suit les mises à jour de l'app, comme FFmpeg.
-    notes.push("Deno, FFmpeg et TwitchDownloader suivent les mises à jour de Rushes".into());Ok(notes.join(" · "))
+    notes.push("Deno et FFmpeg suivent les mises à jour de Rushes".into());Ok(notes.join(" · "))
 }
 
 #[tauri::command]
