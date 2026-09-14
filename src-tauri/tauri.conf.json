@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Rushes",
+  "version": "1.0.0",
+  "identifier": "app.rushes.desktop",
+  "build": {
+    "beforeDevCommand": "npm run prepare:engines && npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run prepare:engines && npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Rushes",
+        "width": 1260,
+        "height": 820,
+        "minWidth": 980,
+        "minHeight": 680,
+        "center": true,
+        "resizable": true,
+        "fullscreen": false,
+        "transparent": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Video",
+    "publisher": "Rushes",
+    "shortDescription": "Téléchargement de vidéos, VOD et directs depuis Twitch, YouTube et TikTok.",
+    "longDescription": "Application de bureau pour télécharger VOD, vidéos, clips, Shorts et directs, avec choix de la qualité, reprise, extraction audio, moteurs embarqués et mises à jour signées.",
+    "resources": {
+      "resources/engines/": "engines/"
+    },
+    "createUpdaterArtifacts": true,
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "hardenedRuntime": true
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "offlineInstaller",
+        "silent": true
+      }
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

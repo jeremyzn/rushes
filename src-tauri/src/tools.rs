@@ -1,0 +1,71 @@
+use std::{fs, path::{Path, PathBuf}};
+use tauri::{AppHandle, Manager};
+use tokio::process::Command;
+
+pub fn support_dir() -> PathBuf { dirs::data_dir().unwrap_or_else(|| PathBuf::from(".")).join("Rushes") }
+
+/// Reprend réglages, historique et moteurs de l'ancien dossier « TwitchFlow » (renommage de l'app).
+pub fn migrate_legacy_dir() {
+    let Some(base) = dirs::data_dir() else { return };
+    let (old, new) = (base.join("TwitchFlow"), support_dir());
+    if old.exists() && !new.exists() { let _ = fs::rename(&old, &new); }
+}
+pub fn settings_path() -> PathBuf { support_dir().join("settings.json") }
+pub fn history_path() -> PathBuf { support_dir().join("downloads.json") }
+pub fn engines_dir() -> PathBuf { support_dir().join("engines") }
+
+pub fn ensure_dirs() -> std::io::Result<()> { migrate_legacy_dir(); fs::create_dir_all(engines_dir()) }
+
+pub fn engine_name(name: &str) -> String {
+    if cfg!(windows) && !name.ends_with(".exe") { format!("{name}.exe") } else { name.into() }
+}
+
+pub fn find_tool(name: &str) -> Option<PathBuf> {
+    let file = engine_name(name);
+    let local = engines_dir().join(&file);
+    if local.exists() { return Some(local); }
+    if let Ok(path) = which::which(&file) { return Some(path); }
+    if cfg!(target_os = "macos") {
+        for base in ["/opt/homebrew/bin", "/usr/local/bin"] {
+            let path = Path::new(base).join(&file); if path.exists() { return Some(path); }
+        }
+    }
+    None
+}
+
+pub fn install_bundled_engines(app: &AppHandle) -> Result<(), String> {
+    ensure_dirs().map_err(|e| e.to_string())?;
+    let resource_dir = app.path().resource_dir().map_err(|e| e.to_string())?.join("engines");
+    if !resource_dir.exists() { return Ok(()); }
+    for entry in fs::read_dir(&resource_dir).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        if !entry.file_type().map_err(|e| e.to_string())?.is_file() { continue; }
+        let name = entry.file_name();
+        if name.to_string_lossy() == "engines.json" { continue; }
+        let dest = engines_dir().join(&name);
+        let n = name.to_string_lossy().to_lowercase();
+        let always_refresh = n.starts_with("ffmpeg") || n.starts_with("ffprobe") || n.starts_with("twitchdownloader");
+        if always_refresh || !dest.exists() { fs::copy(entry.path(), &dest).map_err(|e| e.to_string())?; }
+        #[cfg(unix)] {
+            use std::os::unix::fs::PermissionsExt;
+            let mut permissions = fs::metadata(&dest).map_err(|e| e.to_string())?.permissions();
+            permissions.set_mode(0o755); fs::set_permissions(&dest, permissions).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
+pub async fn version(path: &Path, args: &[&str]) -> String {
+    match Command::new(path).args(args).output().await {
+        Ok(o) => String::from_utf8_lossy(if o.stdout.is_empty(){&o.stderr}else{&o.stdout}).lines().next().unwrap_or("").trim().to_string(),
+        Err(_) => String::new(),
+    }
+}
+
+pub fn threads_for(profile: &str) -> u8 { match profile { "eco"=>2, "normal"=>4, "turbo"=>8, "max"=>10, _=>6 } }
+
+pub fn sanitize_filename(input: &str) -> String {
+    let invalid = ['<','>',':','"','/','\\','|','?','*'];
+    let cleaned: String = input.chars().map(|c| if invalid.contains(&c) || c.is_control() { '_' } else { c }).collect();
+    cleaned.trim().chars().take(120).collect::<String>()
+}

@@ -1,0 +1,61 @@
+name: Build Rushes
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      # Updater JSON is updated by each platform build; serialize them to avoid release-asset races.
+      max-parallel: 1
+      matrix:
+        include:
+          - platform: macos-15
+            args: "--bundles app,dmg"
+            label: "macOS Apple Silicon"
+          - platform: macos-15-intel
+            args: "--bundles app,dmg"
+            label: "macOS Intel"
+          - platform: windows-latest
+            args: "--bundles nsis,msi"
+            label: "Windows 10/11 x64"
+    runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+      - name: Configure signed updater
+        run: node scripts/configure-release.mjs
+        env:
+          TAURI_UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
+      - name: Build and publish signed installers
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          VITE_PROJECT_URL: https://github.com/${{ github.repository }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "Rushes v__VERSION__"
+          releaseBody: "Rushes desktop release for Windows 10/11 and macOS."
+          releaseDraft: true
+          prerelease: false
+          retryAttempts: 2
+          updaterJsonPreferNsis: true
+          args: ${{ matrix.args }} --config src-tauri/tauri.release.conf.json
