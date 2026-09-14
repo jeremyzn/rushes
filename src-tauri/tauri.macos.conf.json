@@ -21,6 +21,7 @@
         "resizable": true,
         "fullscreen": false,
         "transparent": false,
+        "backgroundColor": "#08090a",
         "label": "main",
         "titleBarStyle": "Overlay",
         "hiddenTitle": true

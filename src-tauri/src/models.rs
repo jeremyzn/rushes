@@ -80,7 +80,6 @@ pub struct Settings {
     pub speed_profile: String,
     pub concurrent_downloads: u8,
     pub smart_fallback: bool,
-    pub download_metadata: bool,
     pub download_thumbnail: bool,
     pub notifications: bool,
     pub auto_check_updates: bool,
@@ -98,7 +97,7 @@ impl Default for Settings {
         Self {
             output_dir: output.to_string_lossy().to_string(),
             theme: "dark".into(), reduced_motion: false, quality: "best".into(), speed_profile: "auto".into(),
-            concurrent_downloads: 2, smart_fallback: true, download_metadata: false, download_thumbnail: false,
+            concurrent_downloads: 2, smart_fallback: true, download_thumbnail: false,
             notifications: true, auto_check_updates: true, auto_update_engines: true, container: "auto".into(), audio_format: "m4a".into(),
             cookies_browser: "none".into(),
         }

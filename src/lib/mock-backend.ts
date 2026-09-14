@@ -49,7 +49,7 @@ const escapeXml = (s: string) =>
 /* Réglages */
 const DEFAULT_SETTINGS: Settings = {
   outputDir: "/Users/demo/Movies/Rushes", theme: "system", reducedMotion: false, quality: "best",
-  speedProfile: "auto", concurrentDownloads: 2, smartFallback: true, downloadMetadata: true,
+  speedProfile: "auto", concurrentDownloads: 2, smartFallback: true,
   downloadThumbnail: true, notifications: true, autoCheckUpdates: true, autoUpdateEngines: false,
   container: "auto", audioFormat: "m4a", cookiesBrowser: "none",
 };

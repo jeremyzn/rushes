@@ -21,7 +21,7 @@ export interface DownloadRequest {
 export interface Settings {
   outputDir: string; theme: "dark" | "light" | "system"; reducedMotion: boolean; quality: string;
   speedProfile: "eco" | "normal" | "auto" | "turbo" | "max"; concurrentDownloads: number; smartFallback: boolean;
-  downloadMetadata: boolean; downloadThumbnail: boolean; notifications: boolean; autoCheckUpdates: boolean; autoUpdateEngines: boolean;
+  downloadThumbnail: boolean; notifications: boolean; autoCheckUpdates: boolean; autoUpdateEngines: boolean;
   container: "auto" | "mp4" | "mkv"; audioFormat: "m4a" | "mp3" | "flac"; cookiesBrowser: "none" | "chrome" | "edge" | "firefox" | "safari";
 }
 export interface EngineStatus { name: string; version: string; available: boolean; path?: string; bundled: boolean; }

@@ -63,7 +63,6 @@ fn build_download_command(r:&DownloadRequest, settings:&Settings)->Result<Comman
     // seule forme que `openPath` et `revealItemInDir` savent ouvrir côté interface.
     let template=outdir.join("%(uploader)s - %(title).180B [%(id)s].%(ext)s");
     c.args(["-o",&template.to_string_lossy()]);
-    if settings.download_metadata { c.arg("--write-info-json"); }
     if settings.download_thumbnail { c.arg("--write-thumbnail"); }
     if settings.cookies_browser!="none" { c.args(["--cookies-from-browser",&settings.cookies_browser]); }
     if r.mode=="audio" { let af=r.audio_format.as_deref().unwrap_or(&settings.audio_format); c.args(["-x","--audio-format",af,"--audio-quality","0"]); }

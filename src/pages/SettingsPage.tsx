@@ -1,5 +1,5 @@
 import { openExternal } from "../lib/platform";
-import { Download, FolderOpen, Gauge, Github, HardDrive, Moon, RefreshCw, ShieldCheck, Sparkles } from "../components/icons";
+import { Chrome, CircleSlash, Download, Edge, Firefox, FolderOpen, Gauge, Github, HardDrive, Moon, RefreshCw, Safari, ShieldCheck, Sparkles } from "../components/icons";
 import { PageBody, PageHeader, Panel, Row } from "../components/page";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -41,9 +41,6 @@ export function SettingsPage({ settings, save, chooseFolder, engines, runtime, u
             <SelectBox value={settings.audioFormat} onChange={(v) => void save({ audioFormat: v as Settings["audioFormat"] })}
               items={[{ value: "m4a", label: "M4A" }, { value: "mp3", label: "MP3" }, { value: "flac", label: "FLAC" }]} />
           </Row>
-          <Row title="Métadonnées" description="Fichier .info.json à côté du média">
-            <Switch checked={settings.downloadMetadata} onCheckedChange={(v) => void save({ downloadMetadata: v })} />
-          </Row>
           <Row title="Miniature" description="Image de couverture à côté du média">
             <Switch checked={settings.downloadThumbnail} onCheckedChange={(v) => void save({ downloadThumbnail: v })} />
           </Row>
@@ -65,10 +62,10 @@ export function SettingsPage({ settings, save, chooseFolder, engines, runtime, u
         <Panel title="Accès aux contenus" icon={<ShieldCheck size={12} />} description="À utiliser uniquement pour des contenus dont le téléchargement est autorisé. Aucun contournement de DRM.">
           <Row title="Cookies du navigateur" description="Pour les contenus réservés à un compte connecté">
             <SelectBox value={settings.cookiesBrowser} onChange={(v) => void save({ cookiesBrowser: v as Settings["cookiesBrowser"] })}
-              items={[{ value: "none", label: "Aucun" }, { value: "chrome", label: "Chrome" },
-                ...(runtime?.os === "windows" ? [{ value: "edge", label: "Edge" }] : []),
-                { value: "firefox", label: "Firefox" },
-                ...(runtime?.os === "macos" ? [{ value: "safari", label: "Safari" }] : [])]} />
+              items={[{ value: "none", label: "Aucun", icon: CircleSlash }, { value: "chrome", label: "Chrome", icon: Chrome },
+                ...(runtime?.os === "windows" ? [{ value: "edge", label: "Edge", icon: Edge }] : []),
+                { value: "firefox", label: "Firefox", icon: Firefox },
+                ...(runtime?.os === "macos" ? [{ value: "safari", label: "Safari", icon: Safari }] : [])]} />
           </Row>
         </Panel>
 

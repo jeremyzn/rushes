@@ -1,10 +1,11 @@
+import type { ComponentType } from "react";
 import { Select as S } from "radix-ui";
 import { Check, ChevronDown } from "../icons";
 import { cn } from "../../lib/utils";
 
 export function SelectBox({ value, onChange, items, placeholder = "Choisir", className }: {
   value: string; onChange: (v: string) => void;
-  items: { value: string; label: string; detail?: string }[];
+  items: { value: string; label: string; detail?: string; icon?: ComponentType<{ size?: number; className?: string }> }[];
   placeholder?: string; className?: string;
 }) {
   return (
@@ -34,7 +35,12 @@ export function SelectBox({ value, onChange, items, placeholder = "Choisir", cla
                 className="relative flex h-8 cursor-default select-none items-center rounded-[9px] pl-7 pr-2.5 text-[13px] text-[var(--ink)] outline-none transition-colors duration-100 data-[highlighted]:bg-[var(--raised)] data-[state=checked]:font-medium"
               >
                 <S.ItemIndicator className="absolute left-2"><Check size={13} /></S.ItemIndicator>
-                <S.ItemText>{i.label}</S.ItemText>
+                <S.ItemText>
+                  <span className="flex items-center gap-2">
+                    {i.icon && <i.icon size={13} className="shrink-0 text-[var(--muted)]" />}
+                    {i.label}
+                  </span>
+                </S.ItemText>
                 {i.detail && <span className="mono ml-auto pl-4 text-[11px] text-[var(--faint)]">{i.detail}</span>}
               </S.Item>
             ))}

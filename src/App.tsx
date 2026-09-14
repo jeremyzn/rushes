@@ -82,9 +82,17 @@ export default function App() {
   }, [settings]);
 
   // L'updater n'existe que dans les builds de release : en développement, aucune vérification.
+  // Vérification au lancement puis toutes les six heures, pour que les sessions
+  // longues finissent par voir une version publiée après leur démarrage.
   useEffect(() => {
     if (!settings?.autoCheckUpdates || !runtime?.updaterEnabled) return;
-    checkForUpdate().then((u) => { if (u) setUpdateDialog({ version: u.version, body: u.body ?? undefined, update: u }); }).catch(() => {});
+    let cancelled = false;
+    const look = () => checkForUpdate()
+      .then((u) => { if (u && !cancelled) setUpdateDialog((current) => current ?? { version: u.version, body: u.body ?? undefined, update: u }); })
+      .catch(() => {});
+    void look();
+    const timer = setInterval(() => void look(), 6 * 60 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(timer); };
   }, [settings?.autoCheckUpdates, runtime?.updaterEnabled]);
 
   useEffect(() => {
